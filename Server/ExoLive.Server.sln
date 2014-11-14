@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExoLive.Server.Core", "ExoLive.Server.Core\ExoLive.Server.Core.csproj", "{E62A410C-EFD0-46F3-BED4-B9AD346BC535}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExoLive.Server.App", "ExoLive.Server.App\ExoLive.Server.App.csproj", "{DBD11E5E-7E76-4B05-BC15-17BB47BCDC7F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExoLive.Server.Common", "ExoLive.Server.Common\ExoLive.Server.Common.csproj", "{E68B8111-39F8-46EA-863F-06FEEC28352D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{2D17AEB7-F86A-4A13-A69F-DC59B0560275}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Providers", "Providers", "{46F11DE9-A547-43A9-9ACE-051A351BF375}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExoLive.DataProvider.SqLite", "ExoLive.DataProvider.Sqlite\ExoLive.DataProvider.SqLite.csproj", "{78BF19B4-EE2C-46FC-AB6E-73AAE7F8868D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E62A410C-EFD0-46F3-BED4-B9AD346BC535}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E62A410C-EFD0-46F3-BED4-B9AD346BC535}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E62A410C-EFD0-46F3-BED4-B9AD346BC535}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E62A410C-EFD0-46F3-BED4-B9AD346BC535}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBD11E5E-7E76-4B05-BC15-17BB47BCDC7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBD11E5E-7E76-4B05-BC15-17BB47BCDC7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBD11E5E-7E76-4B05-BC15-17BB47BCDC7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBD11E5E-7E76-4B05-BC15-17BB47BCDC7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E68B8111-39F8-46EA-863F-06FEEC28352D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E68B8111-39F8-46EA-863F-06FEEC28352D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E68B8111-39F8-46EA-863F-06FEEC28352D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E68B8111-39F8-46EA-863F-06FEEC28352D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78BF19B4-EE2C-46FC-AB6E-73AAE7F8868D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78BF19B4-EE2C-46FC-AB6E-73AAE7F8868D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78BF19B4-EE2C-46FC-AB6E-73AAE7F8868D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78BF19B4-EE2C-46FC-AB6E-73AAE7F8868D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DBD11E5E-7E76-4B05-BC15-17BB47BCDC7F} = {2D17AEB7-F86A-4A13-A69F-DC59B0560275}
+		{78BF19B4-EE2C-46FC-AB6E-73AAE7F8868D} = {46F11DE9-A547-43A9-9ACE-051A351BF375}
+	EndGlobalSection
+EndGlobal

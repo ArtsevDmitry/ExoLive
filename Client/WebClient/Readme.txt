@@ -1,0 +1,1 @@
+This is root directory for Web Client application and resources
