@@ -3,34 +3,34 @@ using System.Collections.Specialized;
 using System.Configuration;
 using System.Configuration.Provider;
 using ExoLive.Server.Common.Providers;
-using ExoLive.Server.Core.Providers.DataProvider.Config;
+using ExoLive.Server.Core.Providers.UserAgentProvider.Config;
 
-namespace ExoLive.Server.Core.Providers.DataProvider
+namespace ExoLive.Server.Core.Providers.UserAgentProvider
 {
     /// <summary>
     /// Data provider manager. Central access point for data layer in server application.
     /// </summary>
-    public class DataProviderManager
+    public class UserAgentProviderManager
     {
-        static DataProviderManager()
+        static UserAgentProviderManager()
         {
             Initialize();
         }
 
-        private static DataProviderBase _default;
+        private static UserAgentProviderBase _default;
         /// <summary>
         /// Return default data provider from config file
         /// </summary>
-        public static DataProviderBase Default
+        public static UserAgentProviderBase Default
         {
             get { return _default; }
         }
 
-        private static DataProviderCollection _providerCollection;
+        private static UserAgentProviderCollection _providerCollection;
         /// <summary>
         /// Return collection all available data providers
         /// </summary>
-        public static DataProviderCollection Providers
+        public static UserAgentProviderCollection Providers
         {
             get { return _providerCollection; }
         }
@@ -49,17 +49,17 @@ namespace ExoLive.Server.Core.Providers.DataProvider
         /// </summary>
         private static void Initialize()
         {
-            var configSection = (DataProviderConfiguration)ConfigurationManager.GetSection("DataProviders");
+            var configSection = (UserAgentProviderConfiguration)ConfigurationManager.GetSection("UserAgentProviders");
             if (configSection == null)
-                throw new ConfigurationErrorsException("Section DataProviders not found in config file!");
+                throw new ConfigurationErrorsException("Section UserAgentProviders not found in config file!");
 
-            _providerCollection = new DataProviderCollection();
-            InstantiateProviders(configSection.Providers, _providerCollection, typeof(DataProviderBase));
+            _providerCollection = new UserAgentProviderCollection();
+            InstantiateProviders(configSection.Providers, _providerCollection, typeof(UserAgentProviderBase));
 
             _providerSettings = configSection.Providers;
 
             if (_providerCollection[configSection.DefaultProviderName] == null)
-                throw new ConfigurationErrorsException("Default DataProvider not set!");
+                throw new ConfigurationErrorsException("Default UserAgentProvider not set!");
             _default = _providerCollection[configSection.DefaultProviderName];
         }
 
@@ -75,15 +75,15 @@ namespace ExoLive.Server.Core.Providers.DataProvider
         {
             string typeName = providerSettings.Type == null ? null : providerSettings.Type.Trim();
             if (string.IsNullOrEmpty(typeName))
-                throw new ArgumentException("DataProvider has not type name");
+                throw new ArgumentException("UserAgentProvider has not type name");
 
             var splitedTypeName = typeName.Split(',');
             if (splitedTypeName.Length != 2)
-                throw new ArgumentException("DataProvider type not contains information about assembly, try use 'typename, assemblyname'");
+                throw new ArgumentException("UserAgentProvider type not contains information about assembly, try use 'typename, assemblyname'");
 
             var type = Type.GetType(typeName);
             if (type == null)
-                throw new ArgumentException("DataProvider type not found");
+                throw new ArgumentException("UserAgentProvider type not found");
 
             if (type.ContainsGenericParameters)
             {
@@ -91,7 +91,7 @@ namespace ExoLive.Server.Core.Providers.DataProvider
                 type = type.MakeGenericType(genericTypes);
             }
             if (!providerType.IsAssignableFrom(type))
-                throw new ArgumentException("DataProvider must be implemented from type ", providerType.ToString());
+                throw new ArgumentException("UserAgentProvider must be implemented from type ", providerType.ToString());
 
             var providerBase = (ProviderBase)Activator.CreateInstance(type, new object[]{});
             var parameters = providerSettings.Parameters;
