@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration.Provider;
+using System.Data;
+using System.Data.Common;
 using ExoLive.Server.Common.Models;
 
 namespace ExoLive.Server.Common.Providers
@@ -18,11 +20,15 @@ namespace ExoLive.Server.Common.Providers
             End
         }
 
+        public abstract IDbConnection CreateConnection();
         public abstract int CheckTest(int source);
-        public abstract Option SetOption(string key, string value);
-        public abstract Option GetOption(string key, string defaultValue = null);
+        public abstract Option SetOption(string key, string value, object objCnnOrTxn = null);
+        public abstract Option GetOption(string key, string defaultValue = null, object objCnnOrTxn = null);
         public abstract List<Option> GetOptions(string keyData, OptionSearchPattern searchPattern, string defaultValue = null);
         public abstract Company GetOrganization(Guid id);
         public abstract ApiKeyInfo GetApiKeyInfo(string apiKey);
+        public abstract void InsertUserAgentInfoBulk(List<UserAgentInfo> items, object objCnnOrTxn = null);
+        public abstract void DeleteAllUserAgentInfo(object objCnnOrTxn = null);
+        public abstract UserAgentInfo GetUserAgentInfo(string userAgentString, object objCnnOrTxn = null);
     }
 }

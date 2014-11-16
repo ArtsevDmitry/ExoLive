@@ -26,7 +26,10 @@ namespace ExoLive.Server.Core
             DataProviderManager.Default.CheckTest(100);
             UserAgentProviderManager.Default.CheckTest(100);
             UserAgentProviderManager.Default.SetDataProvider(DataProviderManager.Default);
-            UserAgentProviderManager.Default.DataUpdate();
+            if (UserAgentProviderManager.Default.IsNeedDataUpdate())
+                UserAgentProviderManager.Default.DataUpdate();
+
+            var usag = UserAgentProviderManager.Default.GetUserAgentInfo(@"Mozilla/5.0 (*FreeBSD x86_64*) Gecko* Firefox/34.0*");
         }
 
         public void Start()

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Diagnostics;
+using System.Data;
 using System.IO;
+using System.Net;
 using ExoLive.Server.Common.Models;
 using ExoLive.Server.Common.Providers;
 using Ionic.Zip;
@@ -11,13 +12,7 @@ namespace ExoLive.UserAgentProvider.Browcap
 {
     public class BrowcapUserAgentProvider : UserAgentProviderBase
     {
-        private class CsvLine : UserAgentInfo
-        {
-            public string Parent { get; set; }
-        }
-
         private DataProviderBase _dataProvider;
-
         private const string ConfigUpdateIntervalMinutes = "updateIntervalMinutes";
         private NameValueCollection _config;
 
@@ -78,10 +73,18 @@ namespace ExoLive.UserAgentProvider.Browcap
         public override void DataUpdate()
         {
             bool isError = false;
+            bool isSuccess = false;
+            var tempZip = Path.GetTempFileName();
             var tempFile = Path.GetTempFileName();
+            IDbConnection cnn = null;
+            IDbTransaction txn = null;
             try
             {
-                using (var zipFile = ZipFile.Read(@"E:\Data\ExoLiveProject\Unsorted\browscap.zip"))
+                using (var web = new WebClient())
+                {
+                    web.DownloadFile("http://browscap.org/stream?q=BrowsCapZIP", tempZip);
+                }
+                using (var zipFile = ZipFile.Read(tempZip))
                 {
                     foreach (ZipEntry entry in zipFile)
                     {
@@ -97,13 +100,14 @@ namespace ExoLive.UserAgentProvider.Browcap
 
                 var dicColumn = new Dictionary<int, string>();
                 int index = 0;
-                string[] splitedLine;
-                var csvLineList = new List<CsvLine>();
-                var agentList = new List<UserAgentInfo>();
+                //var csvLineList = new List<CsvLine>();
                 using (var fs = new FileStream(tempFile, FileMode.Open, FileAccess.Read))
                 {
                     using (var sr = new StreamReader(fs))
                     {
+                        cnn = _dataProvider.CreateConnection();
+                        txn = cnn.BeginTransaction();
+                        _dataProvider.DeleteAllUserAgentInfo(txn);
                         while (true)
                         {
                             var line = sr.ReadLine();
@@ -115,7 +119,7 @@ namespace ExoLive.UserAgentProvider.Browcap
                             }
 
                             int colIndex = 0;
-                            splitedLine = line.Split(new[] { "\"," }, StringSplitOptions.RemoveEmptyEntries);
+                            string[] splitedLine = line.Split(new[] { "\"," }, StringSplitOptions.RemoveEmptyEntries);
                             if (index == 2)
                             {
                                 foreach (var column in splitedLine)
@@ -128,10 +132,11 @@ namespace ExoLive.UserAgentProvider.Browcap
                                 continue;
                             }
 
-                            //var agent = new UserAgentInfo();
-                            var csvLine = new CsvLine();
-                            csvLine.BrowserVersionRelease = UserAgentInfo.BrowserVersionReleaseType.Release;
-                            csvLine.ProcessorBits = UserAgentInfo.ProcessorBitsType.Bit32;
+                            var userAgentInfo = new UserAgentInfo
+                            {
+                                BrowserVersionRelease = UserAgentInfo.BrowserVersionReleaseType.Release,
+                                ProcessorBits = UserAgentInfo.ProcessorBitsType.Bit32
+                            };
                             foreach (var column in splitedLine)
                             {
                                 if (column == string.Empty) continue;
@@ -139,79 +144,92 @@ namespace ExoLive.UserAgentProvider.Browcap
                                 switch (dicColumn[colIndex])
                                 {
                                     case "PropertyName":
-                                        csvLine.UserAgent = GetStringWithoutQuotes(column);
+                                        userAgentInfo.UserAgent = GetStringWithoutQuotes(column);
                                         break;
                                     case "Browser":
-                                        csvLine.BrowserName = GetStringWithoutQuotes(column);
+                                        userAgentInfo.BrowserName = GetStringWithoutQuotes(column);
                                         break;
                                     case "Version":
-                                        csvLine.BrowserVersion = GetStringWithoutQuotes(column);
+                                        userAgentInfo.BrowserVersion = GetStringWithoutQuotes(column);
                                         break;
                                     case "MajorVer":
-                                        csvLine.BrowserVersionMajor = GetStringWithoutQuotes(column);
+                                        userAgentInfo.BrowserVersionMajor = GetStringWithoutQuotes(column);
                                         break;
                                     case "MinorVer":
-                                        csvLine.BrowserVersionMinor = GetStringWithoutQuotes(column);
+                                        userAgentInfo.BrowserVersionMinor = GetStringWithoutQuotes(column);
                                         break;
                                     case "Alpha":
-                                        if (GetStringWithoutQuotes(column) == "true") csvLine.BrowserVersionRelease = UserAgentInfo.BrowserVersionReleaseType.Alpha;
+                                        if (GetStringWithoutQuotes(column) == "true") userAgentInfo.BrowserVersionRelease = UserAgentInfo.BrowserVersionReleaseType.Alpha;
                                         break;
                                     case "Beta":
-                                        if (GetStringWithoutQuotes(column) == "true") csvLine.BrowserVersionRelease = UserAgentInfo.BrowserVersionReleaseType.Beta;
+                                        if (GetStringWithoutQuotes(column) == "true") userAgentInfo.BrowserVersionRelease = UserAgentInfo.BrowserVersionReleaseType.Beta;
                                         break;
                                     case "Crawler":
-                                        csvLine.IsCrawler = GetStringWithoutQuotes(column) == "true";
+                                        userAgentInfo.IsCrawler = GetStringWithoutQuotes(column) == "true";
                                         break;
                                     case "isMobileDevice":
-                                        csvLine.IsMobileDevice = GetStringWithoutQuotes(column) == "true";
+                                        userAgentInfo.IsMobileDevice = GetStringWithoutQuotes(column) == "true";
                                         break;
                                     case "isSyndicationReader":
-                                        csvLine.IsSyndicationReader = GetStringWithoutQuotes(column) == "true";
+                                        userAgentInfo.IsSyndicationReader = GetStringWithoutQuotes(column) == "true";
                                         break;
                                     case "isTablet":
-                                        csvLine.IsTablet = GetStringWithoutQuotes(column) == "true";
+                                        userAgentInfo.IsTablet = GetStringWithoutQuotes(column) == "true";
                                         break;
-                                    case "Parent":
-                                        csvLine.Parent = GetStringWithoutQuotes(column);
-                                        break;
+                                    //case "Parent":
+                                    //    userAgentInfo.Parent = GetStringWithoutQuotes(column);
+                                    //    break;
                                     case "Platform":
-                                        csvLine.PlatformName = GetStringWithoutQuotes(column);
+                                        userAgentInfo.PlatformName = GetStringWithoutQuotes(column);
                                         break;
                                     case "Platform_Version":
-                                        csvLine.PlatformVersion = GetStringWithoutQuotes(column);
+                                        userAgentInfo.PlatformVersion = GetStringWithoutQuotes(column);
                                         break;
                                     case "Win16":
-                                        if (GetStringWithoutQuotes(column) == "true") csvLine.ProcessorBits = UserAgentInfo.ProcessorBitsType.Bit16;
+                                        if (GetStringWithoutQuotes(column) == "true") userAgentInfo.ProcessorBits = UserAgentInfo.ProcessorBitsType.Bit16;
                                         break;
                                     case "Win32":
-                                        if (GetStringWithoutQuotes(column) == "true") csvLine.ProcessorBits = UserAgentInfo.ProcessorBitsType.Bit32;
+                                        if (GetStringWithoutQuotes(column) == "true") userAgentInfo.ProcessorBits = UserAgentInfo.ProcessorBitsType.Bit32;
                                         break;
                                     case "Win64":
-                                        if (GetStringWithoutQuotes(column) == "true") csvLine.ProcessorBits = UserAgentInfo.ProcessorBitsType.Bit64;
+                                        if (GetStringWithoutQuotes(column) == "true") userAgentInfo.ProcessorBits = UserAgentInfo.ProcessorBitsType.Bit64;
                                         break;
                                 }
 
                                 colIndex++;
                             }
-                            csvLineList.Add(csvLine);
+
+                            _dataProvider.InsertUserAgentInfoBulk(new List<UserAgentInfo> { userAgentInfo }, txn);
                             index++;
-                            Debug.WriteLine(index);
                         }
+                        txn.Commit();
                     }
                 }
+                isSuccess = true;
             }
-            catch (Exception ex)
+            catch
             {
                 isError = true;
+                if (txn != null)
+                {
+                    txn.Rollback();
+                    txn.Dispose();
+                }
+                if (cnn != null)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
             }
             finally
             {
-                if (!isError)
+                if (!isError && isSuccess)
                 {
                     var lastSuccessUpdateDateTimeString = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
                     _dataProvider.SetOption("ExoLive.UserAgentProvider.Browcap.LastSuccessUpdateDateTime", lastSuccessUpdateDateTimeString);
                 }
                 if (File.Exists(tempFile)) File.Delete(tempFile);
+                if (File.Exists(tempZip)) File.Delete(tempZip);
             }
         }
 
@@ -230,7 +248,7 @@ namespace ExoLive.UserAgentProvider.Browcap
 
         public override UserAgentInfo GetUserAgentInfo(string userAgent)
         {
-            throw new NotImplementedException();
+            return _dataProvider.GetUserAgentInfo(userAgent);
         }
     }
 }

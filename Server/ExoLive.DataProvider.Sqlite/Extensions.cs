@@ -11,6 +11,12 @@ namespace ExoLive.DataProvider.SqLite
             return rd.IsDBNull(index) ? defaultValue : rd.GetString(index);
         }
 
+        public static byte ToNullByte(this DbDataReader rd, string columnName, byte defaultValue)
+        {
+            var index = rd.GetOrdinal(columnName);
+            return rd.IsDBNull(index) ? defaultValue : rd.GetByte(index);
+        }
+
         public static bool ToNullBool(this DbDataReader rd, string columnName, bool defaultValue)
         {
             var index = rd.GetOrdinal(columnName);

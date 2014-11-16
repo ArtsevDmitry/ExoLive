@@ -31,7 +31,7 @@
 			var caps = getBrowserCaps();
 			$.ajax({
 				type: "POST",
-				url: 'http://localhost:7777/webclient/662F996C0F4A4B2F9DCB9E269463CEF1/test',
+				url: 'http://localhost:7777/webclient/662F996C0F4A4B2F9DCB9E269463CEF10/test',
 				data: {
 					apiKey: "1234567890"
 				},

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Data;
 using System.Data.SQLite;
 using ExoLive.Server.Common.Models;
 using ExoLive.Server.Common.Providers;
@@ -73,24 +74,48 @@ namespace ExoLive.DataProvider.SqLite
             return cmd;
         }
 
+        public override IDbConnection CreateConnection()
+        {
+            return CreateConnection();
+        }
+
         public override int CheckTest(int source)
         {
             return source;
         }
 
-        public override Option SetOption(string key, string value)
+        public override Option SetOption(string key, string value, object objCnnOrTxn = null)
         {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+
             var optionResult = new Option
             {
                 Id = Guid.NewGuid().ToString(),
                 Key = key,
                 Value = value
             };
-            const string sql = @"INSERT INTO OptionTable(Id, ""Key"", Value) VALUES(@Id, @Key, @Value);";
-            using (var cnn = CreateConnection())
+
+            try
             {
-                using (var cmd = CreateCommand(cnn))
+                var existentOption = GetOption(key, "OPTION_NOT_FOUND", objCnnOrTxn);
+                if (existentOption.Value == "OPTION_NOT_FOUND")
                 {
+                    const string sql = @"INSERT INTO OptionTable(Id, ""Key"", Value) VALUES(@Id, @Key, @Value);";
+                    cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                    cmd.CommandText = sql;
+                    cmd.Parameters.AddWithValue("Id", optionResult.Id);
+                    cmd.Parameters.AddWithValue("Key", optionResult.Key);
+                    cmd.Parameters.AddWithValue("Value", optionResult.Value);
+                    cmd.ExecuteNonQuery();
+                }
+                else
+                {
+                    const string sql = @"UPDATE OptionTable SET Value=@Value WHERE Id=@Id;";
+                    cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
                     cmd.CommandText = sql;
                     cmd.Parameters.AddWithValue("Id", optionResult.Id);
                     cmd.Parameters.AddWithValue("Key", optionResult.Key);
@@ -98,30 +123,51 @@ namespace ExoLive.DataProvider.SqLite
                     cmd.ExecuteNonQuery();
                 }
             }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
 
             return optionResult;
         }
 
-        public override Option GetOption(string key, string defaultValue = null)
+        public override Option GetOption(string key, string defaultValue = null, object objCnnOrTxn = null)
         {
-            const string sql = @"SELECT ""Id"", ""Key"", ""Value"" FROM OptionTable WHERE Key='@Key';";
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
 
-            using (var cnn = CreateConnection())
+            try
             {
-                using (var cmd = CreateCommand(cnn))
+                const string sql = @"SELECT ""Id"", ""Key"", ""Value"" FROM OptionTable WHERE Key='@Key';";
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.CommandText = sql;
+                cmd.Parameters.AddWithValue("Key", key);
+                using (var rd = cmd.ExecuteReader())
                 {
-                    cmd.CommandText = sql;
-                    cmd.Parameters.AddWithValue("Key", key);
-                    using (var rd = cmd.ExecuteReader())
-                    {
-                        if (rd.Read())
-                            return new Option
-                            {
-                                Id = rd.ToNullString("Id", string.Empty),
-                                Key = key,
-                                Value = rd.ToNullString("Value", defaultValue)
-                            };
-                    }
+                    if (rd.Read())
+                        return new Option
+                        {
+                            Id = rd.ToNullString("Id", string.Empty),
+                            Key = key,
+                            Value = rd.ToNullString("Value", defaultValue)
+                        };
+                }
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
                 }
             }
 
@@ -232,6 +278,125 @@ WHERE A.Key=@Key;";
             }
 
             return apiKeyInfo;
+        }
+
+        public override void InsertUserAgentInfoBulk(List<UserAgentInfo> items, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+            try
+            {
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.Transaction = (SQLiteTransaction)txn;
+                cmd.Connection = (SQLiteConnection)cnn;
+                cmd.CommandText = "INSERT INTO UserAgentInfoTable (Id, UserAgent, BrowserName, BrowserVersion, BrowserVersionMajor, BrowserVersionMinor, BrowserVersionRelease, PlatformName, PlatformVersion, ProcessorBits, IsMobileDevice, IsTablet, IsSyndicationReader, IsCrawler) VALUES (@Id, @UserAgent, @BrowserName, @BrowserVersion, @BrowserVersionMajor, @BrowserVersionMinor, @BrowserVersionRelease, @PlatformName, @PlatformVersion, @ProcessorBits, @IsMobileDevice, @IsTablet, @IsSyndicationReader, @IsCrawler);";
+
+                foreach (var userAgentInfo in items)
+                {
+                    cmd.Parameters.Clear();
+                    cmd.Parameters.AddWithValue("Id", Guid.NewGuid().ToString());
+                    cmd.Parameters.AddWithValue("UserAgent", userAgentInfo.UserAgent);
+                    cmd.Parameters.AddWithValue("BrowserName", userAgentInfo.BrowserName);
+                    cmd.Parameters.AddWithValue("BrowserVersion", userAgentInfo.BrowserVersion);
+                    cmd.Parameters.AddWithValue("BrowserVersionMajor", userAgentInfo.BrowserVersionMajor);
+                    cmd.Parameters.AddWithValue("BrowserVersionMinor", userAgentInfo.BrowserVersionMinor);
+                    cmd.Parameters.AddWithValue("BrowserVersionRelease", userAgentInfo.BrowserVersionRelease);
+                    cmd.Parameters.AddWithValue("PlatformName", userAgentInfo.PlatformName);
+                    cmd.Parameters.AddWithValue("PlatformVersion", userAgentInfo.PlatformVersion);
+                    cmd.Parameters.AddWithValue("ProcessorBits", userAgentInfo.ProcessorBits);
+                    cmd.Parameters.AddWithValue("IsMobileDevice", userAgentInfo.IsMobileDevice);
+                    cmd.Parameters.AddWithValue("IsTablet", userAgentInfo.IsTablet);
+                    cmd.Parameters.AddWithValue("IsSyndicationReader", userAgentInfo.IsSyndicationReader);
+                    cmd.Parameters.AddWithValue("IsCrawler", userAgentInfo.IsCrawler);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public override void DeleteAllUserAgentInfo(object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            IDbCommand cmd = null;
+            try
+            {
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.Transaction = txn;
+                cmd.Connection = cnn;
+                cmd.CommandText = "DELETE FROM UserAgentInfoTable;";
+                cmd.ExecuteNonQuery();
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public override UserAgentInfo GetUserAgentInfo(string userAgentString, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+            try
+            {
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.CommandText = "SELECT Id, UserAgent, BrowserName, BrowserVersion, BrowserVersionMajor, BrowserVersionMinor, BrowserVersionRelease, PlatformName, PlatformVersion, ProcessorBits, IsMobileDevice, IsTablet, IsSyndicationReader, IsCrawler FROM UserAgentInfoTable WHERE UserAgent=@UserAgent;";
+                cmd.Parameters.AddWithValue("UserAgent", userAgentString);
+                using (var rd = cmd.ExecuteReader())
+                {
+                    while (rd.Read())
+                    {
+                        return new UserAgentInfo
+                        {
+                            UserAgent = rd.ToNullString("UserAgent", string.Empty),
+                            BrowserName = rd.ToNullString("BrowserName", string.Empty),
+                            BrowserVersion = rd.ToNullString("BrowserVersion", string.Empty),
+                            BrowserVersionMajor = rd.ToNullString("BrowserVersionMajor", string.Empty),
+                            BrowserVersionMinor = rd.ToNullString("BrowserVersionMinor", string.Empty),
+                            BrowserVersionRelease = (UserAgentInfo.BrowserVersionReleaseType)rd.ToNullByte("BrowserVersionRelease", (byte)UserAgentInfo.BrowserVersionReleaseType.Release),
+                            PlatformName = rd.ToNullString("PlatformName", string.Empty),
+                            PlatformVersion = rd.ToNullString("PlatformVersion", string.Empty),
+                            ProcessorBits = (UserAgentInfo.ProcessorBitsType)rd.ToNullByte("ProcessorBits", (byte)UserAgentInfo.ProcessorBitsType.Bit32),
+                            IsMobileDevice = rd.ToNullBool("IsMobileDevice", false),
+                            IsTablet = rd.ToNullBool("IsTablet", false),
+                            IsSyndicationReader = rd.ToNullBool("IsSyndicationReader", false),
+                            IsCrawler = rd.ToNullBool("IsCrawler", false)
+                        };
+                    }
+                }
+
+                return null;
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
         }
     }
 }
