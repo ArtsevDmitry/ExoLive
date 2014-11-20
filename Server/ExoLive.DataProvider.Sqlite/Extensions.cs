@@ -1,4 +1,5 @@
-﻿using System.Data.Common;
+﻿using System;
+using System.Data.Common;
 
 namespace ExoLive.DataProvider.SqLite
 {
@@ -21,6 +22,12 @@ namespace ExoLive.DataProvider.SqLite
         {
             var index = rd.GetOrdinal(columnName);
             return rd.IsDBNull(index) ? defaultValue : rd.GetBoolean(index);
+        }
+
+        public static DateTime? ToNullDateTime(this DbDataReader rd, string columnName, DateTime? defaultValue)
+        {
+            var index = rd.GetOrdinal(columnName);
+            return rd.IsDBNull(index) ? defaultValue : rd.GetDateTime(index);
         }
 
     }

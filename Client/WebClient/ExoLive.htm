@@ -7,7 +7,15 @@
 	<body>
 		<script>
 			$(function() {
-				live = $.ExoLive({apiKey: "123"});
+				live = $.ExoLive({
+					apiKey: "662F996C0F4A4B2F9DCB9E269463CEF1",
+					onCapsDetecting: function(){
+						return { test: 123 };
+					},
+					onInitComplete: function(){
+						alert("InitComplete");
+					}
+				});
 				//live.showData();
 			});
 		</script>

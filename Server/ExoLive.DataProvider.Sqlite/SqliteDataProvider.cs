@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
 using System.Data.SQLite;
+using System.Diagnostics;
 using ExoLive.Server.Common.Models;
 using ExoLive.Server.Common.Providers;
+using System.Linq;
 
 namespace ExoLive.DataProvider.SqLite
 {
@@ -387,6 +389,314 @@ WHERE A.Key=@Key;";
                 }
 
                 return null;
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public override WebSessionInfo FindWebSessionInfo(string userAgent, string ipAddress, string cookieId, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+            try
+            {
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.CommandText = "SELECT Id, UserAgent, IpAddress, CookieId, StartDateTime FROM WebSessionTable WHERE UserAgent=@UserAgent AND IpAddress=@IpAddress AND CookieId=@CookieId;";
+                cmd.Parameters.AddWithValue("UserAgent", userAgent);
+                cmd.Parameters.AddWithValue("IpAddress", ipAddress);
+                cmd.Parameters.AddWithValue("CookieId", cookieId);
+                using (var rd = cmd.ExecuteReader())
+                {
+                    while (rd.Read())
+                    {
+                        return new WebSessionInfo
+                        {
+                            Id = rd.ToNullString("Id", string.Empty),
+                            UserAgent = rd.ToNullString("UserAgent", string.Empty),
+                            IpAddress = rd.ToNullString("IpAddress", string.Empty),
+                            CookieId = rd.ToNullString("CookieId", string.Empty),
+                            StartDateTime = rd.ToNullDateTime("StartDateTime", null)
+                        };
+                    }
+                }
+
+                return null;
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public void CreateWebSessionInfo(string id, string userAgent, string ipAddress, string cookieId, DateTime actualDateTime, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+            try
+            {
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.CommandText = "INSERT INTO WebSessionTable (Id, UserAgent, IpAddress, CookieId, StartDateTime) VALUES(@Id, @UserAgent, @IpAddress, @CookieId, @StartDateTime)";
+                cmd.Parameters.AddWithValue("Id", id);
+                cmd.Parameters.AddWithValue("UserAgent", userAgent);
+                cmd.Parameters.AddWithValue("IpAddress", ipAddress);
+                cmd.Parameters.AddWithValue("CookieId", cookieId);
+                cmd.Parameters.AddWithValue("StartDateTime", actualDateTime);
+                cmd.ExecuteNonQuery();
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public override WebSessionInfo EnsureWebSessionInfo(string userAgent, string ipAddress, string cookieId, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            var selfTransaction = false;
+            try
+            {
+                selfTransaction = txn == null;
+                if (selfTransaction) txn = cnn.BeginTransaction();
+
+                var existingWebSession = FindWebSessionInfo(userAgent, ipAddress, cookieId, txn);
+                if (existingWebSession == null)
+                {
+                    existingWebSession = new WebSessionInfo
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        CookieId = cookieId,
+                        IpAddress = ipAddress,
+                        StartDateTime = DateTime.Now,
+                        UserAgent = userAgent
+                    };
+                    Debug.Assert(existingWebSession.StartDateTime != null, "existingWebSession.StartDateTime == null");
+                    CreateWebSessionInfo(existingWebSession.Id, userAgent, ipAddress, cookieId, existingWebSession.StartDateTime.Value, txn);
+
+                    txn.Commit();
+                }
+                else
+                {
+                    txn.Rollback();
+                }
+
+                return existingWebSession;
+            }
+            finally
+            {
+                if (selfTransaction && txn != null)
+                {
+                    txn.Dispose();
+                }
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public override void SaveWebFieldBulk(string webSessionId, List<WebFieldInfo> fields, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            var selfTransaction = false;
+            try
+            {
+                selfTransaction = txn == null;
+                if (selfTransaction) txn = cnn.BeginTransaction();
+
+                foreach (var webFieldInfo in fields)
+                {
+                    DeleteWebFieldByKey(webFieldInfo.Key, txn);
+                    CreateWebFieldInfo(Guid.NewGuid().ToString(),
+                        webFieldInfo.WebSessionId,
+                        webFieldInfo.Key,
+                        webFieldInfo.Value,
+                        webFieldInfo.AcrtualDateTime.HasValue ? webFieldInfo.AcrtualDateTime.Value : DateTime.Now,
+                        webFieldInfo.DataType,
+                        txn);
+                }
+                txn.Commit();
+            }
+            finally
+            {
+                if (selfTransaction && txn != null)
+                {
+                    txn.Dispose();
+                }
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public void CreateWebFieldInfo(string id, string webSessionId, string key, string value, DateTime actualDateTime, WebFieldInfo.FieldDataType dataType, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+            try
+            {
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.CommandText = "INSERT INTO WebFieldTable (Id, \"Key\", Value, ActualDateTime, DataType, WebSessionId) VALUES(@Id, @Key, @Value, @ActualDateTime, @DataType, @WebSessionId)";
+                cmd.Parameters.AddWithValue("Id", id);
+                cmd.Parameters.AddWithValue("Key", key);
+                cmd.Parameters.AddWithValue("Value", value);
+                cmd.Parameters.AddWithValue("ActualDateTime", actualDateTime);
+                cmd.Parameters.AddWithValue("DataType", (byte)dataType);
+                cmd.Parameters.AddWithValue("WebSessionId", webSessionId);
+                cmd.ExecuteNonQuery();
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        private void DeleteWebFieldByKey(string key, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+            try
+            {
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.CommandText = "DELETE FROM WebFieldTable WHERE Key=@Key";
+                cmd.Parameters.AddWithValue("Key", key);
+                cmd.ExecuteNonQuery();
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public override List<WebFieldInfo> GetWebFieldsByWebSessionId(string webSessionId, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+            var result = new List<WebFieldInfo>();
+            try
+            {
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.CommandText =
+                    "SELECT Id, \"Key\", Value, ActualDateTime, DataType, WebSessionId FROM WebFieldTable WHERE WebSessionId=@WebSessionId;";
+                cmd.Parameters.AddWithValue("WebSessionId", webSessionId);
+                using (var rd = cmd.ExecuteReader())
+                {
+                    while (rd.Read())
+                    {
+                        result.Add(new WebFieldInfo
+                        {
+                            Id = rd.ToNullString("Id", string.Empty),
+                            Key = rd.ToNullString("Key", string.Empty),
+                            Value = rd.ToNullString("Value", string.Empty),
+                            WebSessionId = rd.ToNullString("WebSessionId", string.Empty),
+                            AcrtualDateTime = rd.ToNullDateTime("AcrtualDateTime", DateTime.Now),
+                            DataType = (WebFieldInfo.FieldDataType)rd.ToNullByte("DataType", 0)
+                        });
+                    }
+                }
+
+                return result;
+            }
+            catch
+            {
+                return result;
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public override List<WebFieldInfo> FindWebFieldBulk(List<string> keys, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+            var result = new List<WebFieldInfo>();
+            try
+            {
+                var inClause = string.Join(",", from string key in keys select string.Format("'{0}'", key));
+
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.CommandText = string.Format("SELECT Id, \"Key\", Value, ActualDateTime, DataType, WebSessionId FROM WebFieldTable WHERE Key IN ({0});", inClause);
+                using (var rd = cmd.ExecuteReader())
+                {
+                    while (rd.Read())
+                    {
+                        result.Add(new WebFieldInfo
+                        {
+                            Id = rd.ToNullString("Id", string.Empty),
+                            Key = rd.ToNullString("Key", string.Empty),
+                            Value = rd.ToNullString("Value", string.Empty),
+                            WebSessionId = rd.ToNullString("WebSessionId", string.Empty),
+                            AcrtualDateTime = rd.ToNullDateTime("AcrtualDateTime", DateTime.Now),
+                            DataType = (WebFieldInfo.FieldDataType)rd.ToNullByte("DataType", 0)
+                        });
+                    }
+                }
+
+                return result;
+            }
+            catch
+            {
+                return result;
             }
             finally
             {
