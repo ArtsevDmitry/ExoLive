@@ -495,7 +495,7 @@ WHERE A.Key=@Key;";
                         StartDateTime = DateTime.Now,
                         UserAgent = userAgent
                     };
-                    Debug.Assert(existingWebSession.StartDateTime != null, "existingWebSession.StartDateTime == null");
+                    Debug.Assert(existingWebSession.StartDateTime != null, "existingWebSession.StartDateTime != null");
                     CreateWebSessionInfo(existingWebSession.Id, userAgent, ipAddress, cookieId, existingWebSession.StartDateTime.Value, txn);
 
                     txn.Commit();
@@ -506,6 +506,130 @@ WHERE A.Key=@Key;";
                 }
 
                 return existingWebSession;
+            }
+            finally
+            {
+                if (selfTransaction && txn != null)
+                {
+                    txn.Dispose();
+                }
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public override WebActivityInfo FindWebActivityInfo(string webSessionId, string url, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+            try
+            {
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.CommandText = "SELECT Id, WebSessionId, DomainId, Url, ReferralUrl, ActivityDateTime FROM WebActivityTable WHERE WebSessionId=@WebSessionId AND Url=@Url;";
+                cmd.Parameters.AddWithValue("WebSessionId", webSessionId);
+                cmd.Parameters.AddWithValue("Url", url);
+                using (var rd = cmd.ExecuteReader())
+                {
+                    while (rd.Read())
+                    {
+                        return new WebActivityInfo
+                        {
+                            Id = rd.ToNullString("Id", string.Empty),
+                            WebSessionId = rd.ToNullString("WebSessionId", string.Empty),
+                            DomainId = rd.ToNullString("DomainId", string.Empty),
+                            Url = rd.ToNullString("Url", string.Empty),
+                            ReferralUrl = rd.ToNullString("ReferralUrl", string.Empty),
+                            ActivityDateTime = rd.ToNullDateTime("ActivityDateTime", null)
+                        };
+                    }
+                }
+
+                return null;
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        private void CreateWebActivityInfo(string id, string webSessionId, string domainId, string url, string referralUrl, DateTime activityDateTime, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+            try
+            {
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.CommandText = "INSERT INTO WebActivityTable (Id, WebSessionId, DomainId, Url, ReferralUrl, ActivityDateTime) VALUES(@Id, @WebSessionId, @DomainId, @Url, @ReferralUrl, @ActivityDateTime)";
+                cmd.Parameters.AddWithValue("Id", id);
+                cmd.Parameters.AddWithValue("WebSessionId", webSessionId);
+                cmd.Parameters.AddWithValue("DomainId", domainId);
+                cmd.Parameters.AddWithValue("Url", url);
+                cmd.Parameters.AddWithValue("ReferralUrl", referralUrl);
+                cmd.Parameters.AddWithValue("ActivityDateTime", activityDateTime);
+                cmd.ExecuteNonQuery();
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public override WebActivityInfo EnsureWebActivityInfo(string webSessionId, string url, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            var selfTransaction = false;
+            try
+            {
+                selfTransaction = txn == null;
+                if (selfTransaction) txn = cnn.BeginTransaction();
+
+                var existingWebActivity = FindWebActivityInfo(webSessionId, url, txn);
+                if (existingWebActivity == null)
+                {
+                    var testUrl = new Uri(url);
+                    var domain = FindWebDomain(testUrl.Authority, txn);
+                    existingWebActivity = new WebActivityInfo
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        WebSessionId = webSessionId,
+                        DomainId = domain.Id,
+                        Url = url,
+                        ReferralUrl = string.Empty,
+                        ActivityDateTime = DateTime.Now
+                    };
+                    Debug.Assert(existingWebActivity.ActivityDateTime != null, "existingWebActivity.ActivityDateTime != null");
+                    CreateWebActivityInfo(existingWebActivity.Id, webSessionId, domain.Id, url, existingWebActivity.ReferralUrl, existingWebActivity.ActivityDateTime.Value, txn);
+
+                    txn.Commit();
+                }
+                else
+                {
+                    txn.Rollback();
+                }
+
+                return existingWebActivity;
             }
             finally
             {
@@ -697,6 +821,48 @@ WHERE A.Key=@Key;";
             catch
             {
                 return result;
+            }
+            finally
+            {
+                if (cmd != null) cmd.Dispose();
+                if (selfConnection)
+                {
+                    cnn.Close();
+                    cnn.Dispose();
+                }
+            }
+        }
+
+        public override WebDomain FindWebDomain(string domainName, object objCnnOrTxn = null)
+        {
+            var txn = objCnnOrTxn as IDbTransaction; IDbConnection cnn;
+            if (txn != null) cnn = txn.Connection; else cnn = objCnnOrTxn as IDbConnection;
+            var selfConnection = cnn == null;
+            if (selfConnection) cnn = CreateConnection();
+            SQLiteCommand cmd = null;
+            try
+            {
+                cmd = txn != null ? CreateCommand((SQLiteTransaction)txn) : CreateCommand((SQLiteConnection)cnn);
+                cmd.CommandText = "SELECT Id, WebSiteName, Domain FROM WebDomainTable WHERE Domain=@Domain";
+                cmd.Parameters.AddWithValue("Domain", domainName);
+                using (var rd = cmd.ExecuteReader())
+                {
+                    while (rd.Read())
+                    {
+                        return new WebDomain
+                        {
+                            Id = rd.ToNullString("Id", string.Empty),
+                            WebSiteName = rd.ToNullString("WebSiteName", string.Empty),
+                            Domain = rd.ToNullString("Domain", string.Empty)
+                        };
+                    }
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
             }
             finally
             {

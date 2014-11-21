@@ -32,9 +32,11 @@ namespace ExoLive.Server.Common.Providers
         public abstract UserAgentInfo GetUserAgentInfo(string userAgentString, object objCnnOrTxn = null);
         public abstract WebSessionInfo FindWebSessionInfo(string userAgent, string ipAddress, string cookieId, object objCnnOrTxn = null);
         public abstract WebSessionInfo EnsureWebSessionInfo(string userAgent, string ipAddress, string cookieId, object objCnnOrTxn = null);
+        public abstract WebActivityInfo FindWebActivityInfo(string webSessionId, string url, object objCnnOrTxn = null);
+        public abstract WebActivityInfo EnsureWebActivityInfo(string webSessionId, string url, object objCnnOrTxn = null);
         public abstract void SaveWebFieldBulk(string webSessionId, List<WebFieldInfo> fields, object objCnnOrTxn = null);
         public abstract List<WebFieldInfo> GetWebFieldsByWebSessionId(string webSessionId, object objCnnOrTxn = null);
         public abstract List<WebFieldInfo> FindWebFieldBulk(List<string> keys, object objCnnOrTxn = null);
-        
+        public abstract WebDomain FindWebDomain(string domainName, object objCnnOrTxn = null);
     }
 }

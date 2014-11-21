@@ -54,7 +54,7 @@
     <Compile Include="Models\UserAgentInfo.cs" />
     <Compile Include="Models\WebDomain.cs" />
     <Compile Include="Models\WebFieldInfo.cs" />
-    <Compile Include="Models\WebSession.cs" />
+    <Compile Include="Models\WebActivity.cs" />
     <Compile Include="Models\WebSessionInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\DataProviderBase.cs" />

@@ -20,10 +20,13 @@ namespace ExoLive.Server.Core
             }
         }
 
-        public BaseResponseJson WebSessionInit(string userAgent, string ipAddress, string cookieId, Dictionary<string, JValue> caps)
+        public BaseResponseJson WebSessionInit(string userAgent, string ipAddress, string cookieId, string url, Dictionary<string, JValue> caps)
         {
             var wsi = DataProviderManager.Default.EnsureWebSessionInfo(userAgent, ipAddress, cookieId);
             if (wsi == null) return new BaseResponseJson { ResultCode = 1 };
+            
+            var wai = DataProviderManager.Default.EnsureWebActivityInfo(wsi.Id, url);
+            if (wai == null) return new BaseResponseJson { ResultCode = 1 };
 
             var qFields = from KeyValuePair<string, JValue> v in caps
                           select new WebFieldInfo

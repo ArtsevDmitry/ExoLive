@@ -19,7 +19,7 @@ namespace ExoLive.Server.Core.RestService
                 {
                     var webSessionId = Request.Form["data"];
                     var dicCaps = GetDictionaryFromKeyValueJson(Request.Form["caps"]);
-                    BaseResponseJson result = WebClientApi.Instance.WebSessionInit((dicCaps["userAgent"]).Value, Request.UserHostAddress, webSessionId, dicCaps);
+                    BaseResponseJson result = WebClientApi.Instance.WebSessionInit((dicCaps["userAgent"]).Value, Request.UserHostAddress, webSessionId, Request.Headers.Referrer, dicCaps);
 
                     var jsonBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(result));
 

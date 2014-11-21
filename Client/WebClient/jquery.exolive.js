@@ -1,24 +1,5 @@
 (function ( $ ) {
 	$.ExoLive = function(options) {
-	
-		function Queue(){
-			var queue  = [];
-			var offset = 0;
-			this.getLength = function(){ return (queue.length - offset); }
-			this.isEmpty = function(){ return (queue.length == 0); }
-			this.enqueue = function(item){ queue.push(item); }
-			this.peek = function(){ return (queue.length > 0 ? queue[offset] : undefined); }			
-			this.dequeue = function(){
-				if (queue.length == 0) return undefined;
-				var item = queue[offset];
-				if (++ offset * 2 >= queue.length){
-				  queue  = queue.slice(offset);
-				  offset = 0;
-				}
-				return item;
-			}
-		}
-		
         var plugin = this;
 		var defaultOptions = {
             apiKey: "",
@@ -29,6 +10,9 @@
 		var webSessionId = getUniqueCode();
 		var runtimeId = getUniqueCode();
 		var initState = false;
+		var sendState = false;
+		var sendInterval;
+		var sendArray = [];
 		var fms = -1;
 		
 		function getBrowserCaps(){
@@ -90,7 +74,7 @@
 		}	
 		
 		function getUniqueCode() {
-			return Math.round(getRandomArbitrary(100000, 999999)) + "" + (new Date()).getTime();
+			return (new Date()).getTime() + "" + Math.round(getRandomArbitrary(100000, 999999));
 		}
 
 		function getRandomArbitrary(min, max) {
@@ -110,7 +94,25 @@
 			alert(settings.apiKey);
 		}
 		
+		function sendMessage(type, data){
+			var msg = {};
+			msg["t"] = type;
+			msg["id"] = getUniqueCode();
+			msg["d"] = data;
+			sendArray.push(msg);
+		}
 		
+		function startSending(){
+			sendInterval = setInterval(function(){
+				
+			}, 200);
+			sendState = true;
+		}
+		
+		function stopSending(){
+			clearInterval(sendInterval);
+			sendState = false;
+		}
 		
 		//var initInterval = setInterval(function(){
 			var webSession = ensureWebSession();
