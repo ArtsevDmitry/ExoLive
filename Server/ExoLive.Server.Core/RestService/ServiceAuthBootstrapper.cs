@@ -34,7 +34,10 @@ namespace ExoLive.Server.Core.RestService
                     Uri originalUrl;
                     if (Uri.TryCreate(nancyContext.Request.Headers.Referrer, UriKind.Absolute, out originalUrl))
                     {
-                        return GetApiKeyUser(apiKey, originalUrl.Authority);
+                        var apiKeyObj = GetApiKeyUser(apiKey, originalUrl.Authority);
+                        nancyContext.ViewBag.apiKey = apiKeyObj.ApiKeyInfo;
+                        nancyContext.ViewBag.userClaims = apiKeyObj.Claims;
+                        return apiKeyObj;
                     }
 
                     //Base parameters not found, user is not authenticated

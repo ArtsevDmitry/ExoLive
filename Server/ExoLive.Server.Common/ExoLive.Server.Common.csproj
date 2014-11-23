@@ -59,6 +59,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\DataProviderBase.cs" />
     <Compile Include="Providers\UserAgentProviderBase.cs" />
+    <Compile Include="Server\MessageServerCommand.cs" />
+    <Compile Include="Server\MessageClientCommand.cs" />
+    <Compile Include="Models\WebClientContext.cs" />
+    <Compile Include="Server\WebServerMessage.cs" />
+    <Compile Include="Server\WebClientMessage.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -17,7 +17,13 @@
 					}
 				});
 				//live.showData();
+				
+				$("#button").click(function() {
+					live.debugMessageSend($("#text").val());
+				});
 			});
 		</script>
+		<input type="text" id="text">
+		<button id="button">Send</button>
 	</body>
 </html>

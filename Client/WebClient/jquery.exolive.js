@@ -13,6 +13,13 @@
 		var sendState = false;
 		var sendInterval;
 		var sendArray = [];
+		var sendingArray = [];
+		var isSendProcess = false;		
+		var receiveState = false;
+		var receiveInterval;
+		var receiveArray = [];
+		var lastReceiveMsgId = 0;
+		var isReceiveProcess = false;
 		var fms = -1;
 		
 		function getBrowserCaps(){
@@ -69,6 +76,7 @@
 		function escape(value){
 			return encodeURIComponent(value);
 		}
+		
 		function unescape(value){
 			return decodeURIComponent(value);
 		}	
@@ -94,6 +102,10 @@
 			alert(settings.apiKey);
 		}
 		
+		this.debugMessageSend = function(text){
+			sendMessage(0, text);
+		}
+		
 		function sendMessage(type, data){
 			var msg = {};
 			msg["t"] = type;
@@ -104,14 +116,78 @@
 		
 		function startSending(){
 			sendInterval = setInterval(function(){
-				
+				if(!isSendProcess && ((sendArray != null && sendArray.length > 0) || (sendingArray != null && sendingArray.length > 0))){
+					isSendProcess = true;
+					var webSession = ensureWebSession();
+					$.ajax({
+						type: "POST",
+						url: "http://localhost:7777/webclient/" + settings.apiKey + "/in",
+						data: {
+							ws: webSession,
+							data: JSON.stringify(getSendItems())
+						},
+						cache: false,
+						success: function (data, textStatus, jqXHR) {
+							isSendProcess = false;
+							if(data.ResultCode == 0){
+								sendingArray = [];								
+							}							
+						},
+						error: function (jqXHR, textStatus, errorThrown) {
+							isSendProcess = false;
+						}
+					});
+				}
 			}, 200);
 			sendState = true;
+		}
+		
+		function getSendItems(){
+			if(sendingArray != null && sendingArray.length > 0)
+				return sendingArray;
+				
+			while(sendArray.length){
+				sendingArray.push(sendArray.pop());
+			}
+			return sendingArray;
 		}
 		
 		function stopSending(){
 			clearInterval(sendInterval);
 			sendState = false;
+		}
+		
+		function startReceiving(){
+			receiveInterval = setInterval(function(){
+				if(!isReceiveProcess)){
+					isReceiveProcess = true;
+					var webSession = ensureWebSession();
+					$.ajax({
+						type: "POST",
+						url: "http://localhost:7777/webclient/" + settings.apiKey + "/out",
+						data: {
+							ws: webSession,
+							lid: lastReceiveMsgId
+						},
+						cache: false,
+						success: function (data, textStatus, jqXHR) {
+							isReceiveProcess = false;
+							if(data.ResultCode == 0){
+								//receivingArray = [];								
+							}							
+						},
+						error: function (jqXHR, textStatus, errorThrown) {
+							isReceiveProcess = false;
+						}
+					});
+				}
+			}, 200);
+			receiveState = true;
+		}
+		
+		function stopReceiving(){
+			clearInterval(receiveInterval);
+			receiveState = false;
 		}
 		
 		//var initInterval = setInterval(function(){
@@ -140,6 +216,11 @@
 			});
 		//}, 1000);
 		
+		sendMessage(0, "123");
+		sendMessage(0, "uwioh rweughfeurhg uioehopirgh eoihjoi");
+		
+		startSending();
+		startReceiving();
 		
 		return plugin;
     };
