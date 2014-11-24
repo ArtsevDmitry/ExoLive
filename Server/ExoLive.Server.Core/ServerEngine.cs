@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using ExoLive.Server.Common;
 using ExoLive.Server.Common.Models;
@@ -22,7 +24,8 @@ namespace ExoLive.Server.Core
         private readonly Thread _inQueueThread;
         private readonly Dictionary<string, List<WebServerMessage>> _outDictionary;
         private readonly object _outDictionaryLock = new object();
-        private readonly Thread _outDictionaryThread;
+        //private readonly Thread _outDictionaryThread;
+        private readonly Dictionary<string, long> _outIdDictionary;
         //REST Service
         private readonly RestServiceHost _restServiceHost;
         //Server instance variable
@@ -50,7 +53,8 @@ namespace ExoLive.Server.Core
             _inQueue = new Queue<WebClientMessage>();
             _outDictionary = new Dictionary<string, List<WebServerMessage>>();
             _inQueueThread = new Thread(InQueueWorkThread);
-            _outDictionaryThread = new Thread(OutDictionaryWorkThread);
+            //_outDictionaryThread = new Thread(OutDictionaryWorkThread);
+            _outIdDictionary = new Dictionary<string, long>();
 
             _restServiceHost = new RestServiceHost();
 
@@ -84,20 +88,20 @@ namespace ExoLive.Server.Core
             }
         }
 
-        private void OutDictionaryWorkThread()
-        {
-            while (!_isEngineStopPending)
-            {
-                Thread.Sleep(1000);
-            }
-        }
+        //private void OutDictionaryWorkThread()
+        //{
+        //    while (!_isEngineStopPending)
+        //    {
+        //        Thread.Sleep(1000);
+        //    }
+        //}
 
         public void Start()
         {
             _isEngineStopPending = false;
             _restServiceHost.Start();
             _inQueueThread.Start();
-            _outDictionaryThread.Start();
+            //_outDictionaryThread.Start();
             _isEngineWork = true;
         }
 
@@ -107,7 +111,7 @@ namespace ExoLive.Server.Core
 
             _restServiceHost.Stop();
             _inQueueThread.Join();
-            _outDictionaryThread.Join();
+            //_outDictionaryThread.Join();
             _isEngineWork = false;
 
             _isEngineStopPending = false;
@@ -118,7 +122,7 @@ namespace ExoLive.Server.Core
             return _isEngineWork ? ServerState.Running : ServerState.NotStarted;
         }
 
-        internal void PushInMessage(WebClientMessage msg, WebClientContext webSessionId)
+        internal void PushInMessage(WebClientMessage msg)
         {
             lock (_inQueueLock)
             {
@@ -128,18 +132,18 @@ namespace ExoLive.Server.Core
             Debug.WriteLine("InMessage[{0}]: {1}", msg.Id, msg.Data);
         }
 
-        internal void PushOutMessage(WebServerMessage msg, string webSessionId)
+        internal void PushOutMessage(WebServerMessage msg)
         {
             lock (_outDictionaryLock)
             {
-                if (!_outDictionary.ContainsKey(webSessionId))
+                if (!_outDictionary.ContainsKey(msg.Context.WebActivity.Id))
                 {
-                    _outDictionary[webSessionId] = new List<WebServerMessage>();
+                    _outDictionary[msg.Context.WebActivity.Id] = new List<WebServerMessage>();
                 }
 
-                _outDictionary[webSessionId].Add(msg);
+                _outDictionary[msg.Context.WebActivity.Id].Add(msg);
             }
-            
+
             Debug.WriteLine("OutMessage[{0}]: {1}", msg.Id, msg.Data);
         }
 
@@ -150,6 +154,87 @@ namespace ExoLive.Server.Core
                 return true;
 
             return false;
+        }
+
+        internal long GetNextOutNumber(WebClientContext context)
+        {
+            const string lastOutNumberConst = "LastOutNumber";
+            long newNum = 0;
+            using (var cnn = DataProviderManager.Default.CreateConnection())
+            {
+                using (var txn = cnn.BeginTransaction())
+                {
+                    var fields = DataProviderManager.Default.FindWebFieldBulkByWebActivity(new List<string> { lastOutNumberConst }, context.WebActivity.Id, txn);
+                    var qField = from WebFieldInfo field in fields
+                                 where field.Key == lastOutNumberConst
+                                 select field;
+                    var fieldLastOutNumber = qField.FirstOrDefault();
+                    long num = 0;
+                    if (fieldLastOutNumber != null)
+                    {
+                        num = Convert.ToInt64(fieldLastOutNumber.Value);
+                    }
+                    newNum = num + 1;
+                    DataProviderManager.Default.SaveWebFieldBulk(context.WebSession.Id, context.WebActivity.Id, new List<WebFieldInfo>
+                    {
+                        new WebFieldInfo
+                        {
+                            AcrtualDateTime = DateTime.Now,
+                            DataType = WebFieldInfo.FieldDataType.String,
+                            Key = lastOutNumberConst,
+                            Value = Convert.ToString(newNum),
+                            WebSessionId = context.WebSession.Id,
+                            WebActivityId = context.WebActivity.Id
+                        }
+                    }, txn);
+
+                    txn.Commit();
+                }
+            }
+
+            return newNum;
+            //lock (_outIdDictionary)
+            //{
+            //    if (_outIdDictionary.ContainsKey(id)) return ++_outIdDictionary[id];
+            //    _outIdDictionary[id] = 0;
+            //    return 0;
+            //}
+        }
+
+        internal bool IsOutMessagesExist(string id, long previousSuccessNumber)
+        {
+            lock (_outDictionaryLock)
+            {
+                if (!_outDictionary.ContainsKey(id)) return false;
+
+                var list = _outDictionary[id];
+                if (list == null || !list.Any()) return false;
+                var qNewMessageTest = from WebServerMessage msg in list
+                                      where msg.Number > previousSuccessNumber
+                                      select msg;
+                return qNewMessageTest.Any();
+            }
+        }
+
+        internal List<WebServerMessage> GetOutMessages(string id, long previousSuccessNumber)
+        {
+            lock (_outDictionaryLock)
+            {
+                var list = _outDictionary[id];
+                if (list != null)
+                {
+                    list.RemoveAll(x => x.Number < previousSuccessNumber);
+
+                    var qSortedList = from WebServerMessage msg in list
+                                      where msg.Number > previousSuccessNumber
+                                      orderby msg.Number ascending
+                                      select msg;
+
+                    return qSortedList.ToList();
+                }
+            }
+
+            return null;
         }
 
         //private int GetInQueueMessagesCount()

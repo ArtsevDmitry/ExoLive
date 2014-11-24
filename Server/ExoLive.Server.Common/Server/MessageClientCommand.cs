@@ -2,7 +2,7 @@
 {
     public enum MessageClientCommand : short
     {
-        UserTextMessage,
-        WebFieldsUpdate
+        UserTextMessage = 100,
+        WebFieldsUpdate = 1
     }
 }

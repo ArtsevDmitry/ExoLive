@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<script src="jquery-1.11.0.min.js"></script>
 		<script src="jquery.exolive.js"></script>
 	</head>
 	<body>
@@ -14,6 +14,9 @@
 					},
 					onInitComplete: function(){
 						alert("InitComplete");
+					},
+					onMessageReceive: function(msg){
+						$("#log").prepend(msg + "<br />");
 					}
 				});
 				//live.showData();
@@ -25,5 +28,6 @@
 		</script>
 		<input type="text" id="text">
 		<button id="button">Send</button>
+		<div id="log" style="width: 100%"></div>
 	</body>
 </html>

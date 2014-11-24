@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using ExoLive.Server.Common.Json;
 using ExoLive.Server.Common.Models;
@@ -42,13 +43,13 @@ namespace ExoLive.Server.Core.RestService
                 if (messages != null)
                 {
                     var sortedMessages = from WebClientMessage msg in messages
-                        orderby msg.Id ascending
-                        select msg;
+                                         orderby msg.Id ascending
+                                         select msg;
 
                     foreach (var webClientMessage in sortedMessages)
                     {
                         webClientMessage.Context = context;
-                        WebClientApi.Instance.NewInMessage(webClientMessage, context);
+                        WebClientApi.Instance.NewInMessage(webClientMessage);
                     }
                 }
 
@@ -64,8 +65,9 @@ namespace ExoLive.Server.Core.RestService
             Post["/out"] = parameters =>
             {
                 var context = GetCurrentContext();
+                var previousSuccessNumber = Request.Form["lid"];
 
-                var jsonBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(WebClientApi.Instance.WaitOutMessages(context)));
+                var jsonBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(WebClientApi.Instance.WaitOutMessages(context, previousSuccessNumber)));
 
                 return new Response
                 {

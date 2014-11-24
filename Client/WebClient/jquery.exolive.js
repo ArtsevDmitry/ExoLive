@@ -4,7 +4,8 @@
 		var defaultOptions = {
             apiKey: "",
             onCapsDetecting: function(){},
-			onInitComplete: function(){}
+			onInitComplete: function(){},
+			onMessageReceive: function(msg){}
         };        
 		var settings = $.extend({}, defaultOptions, options );
 		var webSessionId = getUniqueCode();
@@ -18,7 +19,7 @@
 		var receiveState = false;
 		var receiveInterval;
 		var receiveArray = [];
-		var lastReceiveMsgId = 0;
+		var lastReceiveMsgNum = 0;
 		var isReceiveProcess = false;
 		var fms = -1;
 		
@@ -103,7 +104,7 @@
 		}
 		
 		this.debugMessageSend = function(text){
-			sendMessage(0, text);
+			sendMessage(100, text);
 		}
 		
 		function sendMessage(type, data){
@@ -112,6 +113,10 @@
 			msg["id"] = getUniqueCode();
 			msg["d"] = data;
 			sendArray.push(msg);
+		}
+		
+		function receiveMessage(type, data){
+			settings.onMessageReceive(data);
 		}
 		
 		function startSending(){
@@ -159,22 +164,32 @@
 		
 		function startReceiving(){
 			receiveInterval = setInterval(function(){
-				if(!isReceiveProcess)){
+				if(!isReceiveProcess){
 					isReceiveProcess = true;
 					var webSession = ensureWebSession();
 					$.ajax({
 						type: "POST",
 						url: "http://localhost:7777/webclient/" + settings.apiKey + "/out",
+						timeout: 7000,
 						data: {
 							ws: webSession,
-							lid: lastReceiveMsgId
+							lid: lastReceiveMsgNum
 						},
 						cache: false,
-						success: function (data, textStatus, jqXHR) {
-							isReceiveProcess = false;
-							if(data.ResultCode == 0){
-								//receivingArray = [];								
-							}							
+						success: function (data, textStatus, jqXHR) {							
+							try{
+								if(Object.prototype.toString.call(data) == "[object Array]"){
+									var curMsgNum = lastReceiveMsgNum;
+									
+									for(var i=0; i<data.length; i++) if(parseInt(data[i].n) > lastReceiveMsgNum) lastReceiveMsgNum = parseInt(data[i].n);
+									for(var i=0; i<data.length; i++) {
+										if(parseInt(data[i].n) > curMsgNum)
+											receiveMessage(data[i].t, data[i].d);
+									}
+								}
+							} finally{
+								isReceiveProcess = false;
+							}
 						},
 						error: function (jqXHR, textStatus, errorThrown) {
 							isReceiveProcess = false;
@@ -216,8 +231,8 @@
 			});
 		//}, 1000);
 		
-		sendMessage(0, "123");
-		sendMessage(0, "uwioh rweughfeurhg uioehopirgh eoihjoi");
+		// sendMessage(100, "123");
+		// sendMessage(100, "uwioh rweughfeurhg uioehopirgh eoihjoi");
 		
 		startSending();
 		startReceiving();

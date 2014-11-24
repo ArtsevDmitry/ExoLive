@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using ExoLive.Server.Common.Models;
+using Newtonsoft.Json;
 
 namespace ExoLive.Server.Common.Server
 {
@@ -12,5 +13,12 @@ namespace ExoLive.Server.Common.Server
 
         [JsonProperty("d")]
         public string Data { get; set; }
+
+        [JsonProperty("n")]
+        public long Number { get; set; }
+
+        [JsonIgnore]
+        public WebClientContext Context { get; set; }
+
     }
 }

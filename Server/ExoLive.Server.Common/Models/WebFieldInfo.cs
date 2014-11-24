@@ -28,6 +28,7 @@ namespace ExoLive.Server.Common.Models
 
         public string Id { get; set; }
         public string WebSessionId { get; set; }
+        public string WebActivityId { get; set; }
         public string Key { get; set; }
         public string Value { get; set; }
         public DateTime? AcrtualDateTime { get; set; }

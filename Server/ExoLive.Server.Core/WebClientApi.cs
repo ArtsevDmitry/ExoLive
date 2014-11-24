@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using ExoLive.Server.Common.Json;
 using ExoLive.Server.Common.Models;
 using ExoLive.Server.Common.Server;
@@ -50,9 +51,9 @@ namespace ExoLive.Server.Core
             return new WebClientContext(wsi, wai, apiKey, userClaims);
         }
 
-        public void NewInMessage(WebClientMessage msg, WebClientContext context)
+        public void NewInMessage(WebClientMessage msg)
         {
-            ServerEngine.Instance.PushInMessage(msg, context);
+            ServerEngine.Instance.PushInMessage(msg);
         }
 
         public void ProcessInMessage(WebClientMessage msg)
@@ -60,15 +61,46 @@ namespace ExoLive.Server.Core
             switch (msg.Command)
             {
                 case MessageClientCommand.UserTextMessage:
+                    var msgRet = new WebServerMessage
+                    {
+                        Command = MessageServerCommand.UserTextMessage,
+                        Context = msg.Context,
+                        Data = string.Format("Ответ: {0}", msg.Data),
+                        Id = msg.Id,
+                        Number = ServerEngine.Instance.GetNextOutNumber(msg.Context)
+                    };
+                    ServerEngine.Instance.PushOutMessage(msgRet);
                     break;
             }
             //ServerEngine.Instance.PushOutMessage(msg, webSessionId);
         }
 
-        public List<WebServerMessage> WaitOutMessages(WebClientContext context)
+        public List<WebServerMessage> WaitOutMessages(WebClientContext context, long previousSuccessNumber)
         {
-            return new List<WebServerMessage>();
+            var enterTime = DateTime.Now;
+            const int msTimeout = 5000;
+            var workTime = 0.0D;
+            var result = new List<WebServerMessage>();
+
+            //Register web activity timing
+            DataProviderManager.Default.CreateWebActivityTiming(Guid.NewGuid().ToString(), context.WebActivity.Id, enterTime, string.Empty);
+
+            while (workTime < msTimeout)
+            {
+                if (ServerEngine.Instance.IsOutMessagesExist(context.WebActivity.Id, previousSuccessNumber))
+                {
+                    var list = ServerEngine.Instance.GetOutMessages(context.WebActivity.Id, previousSuccessNumber);
+                    return list;
+                }
+
+                Thread.Sleep(workTime > 50 ? 20 : 5);
+                workTime = (DateTime.Now - enterTime).TotalMilliseconds;
+            }
+
+            return result;
         }
+
+
 
     }
 }
