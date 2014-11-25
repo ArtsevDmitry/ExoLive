@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>login.qml</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <file>LogoColored.ico</file>
+    </qresource>
+</RCC>
