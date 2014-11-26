@@ -1,8 +1,10 @@
 TEMPLATE = app
 
-QT += qml quick widgets
+QT += qml quick widgets network
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    appcontext.cpp \
+    userinfo.cpp
 
 RESOURCES += qml.qrc
 
@@ -18,3 +20,7 @@ include(deployment.pri)
 
 OTHER_FILES += \
     standard.rc
+
+HEADERS += \
+    appcontext.h \
+    userinfo.h

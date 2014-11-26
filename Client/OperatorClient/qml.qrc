@@ -6,4 +6,5 @@
     <qresource prefix="/icons">
         <file>LogoColored.ico</file>
     </qresource>
+    <qresource prefix="/js"/>
 </RCC>
