@@ -4,6 +4,7 @@
 #include <QQmlContext>
 #include <QQmlComponent>
 #include <QWindow>
+#include <QPointer>
 
 #include "userinfo.h"
 #include "appcontext.h"

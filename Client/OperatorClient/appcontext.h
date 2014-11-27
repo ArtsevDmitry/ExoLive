@@ -7,9 +7,11 @@
 #include <QUrlQuery>
 #include <QByteArray>
 #include <QNetworkRequest>
+#include <QNetworkReply>
 #include <QQmlContext>
 #include <QMetaObject>
 #include <QQmlComponent>
+#include <QPointer>
 
 class AppContext : public QObject
 {
@@ -25,7 +27,7 @@ public slots:
     void HttpUserLoginFinished (QNetworkReply*);
 
 private:
-    QNetworkAccessManager *_httpUserLogin = NULL;
+    QPointer<QNetworkAccessManager> _httpUserLogin = NULL;
 };
 
 #endif // APPCONTEXT_H

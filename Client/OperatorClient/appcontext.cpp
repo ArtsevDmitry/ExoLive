@@ -6,7 +6,7 @@ AppContext::AppContext(QObject *parent) :
 }
 
 void AppContext::startUserAuthentication(const QString login, const QString password){
-    if(_httpUserLogin == NULL){
+    if(!_httpUserLogin){
         _httpUserLogin = new QNetworkAccessManager();
         connect(_httpUserLogin, SIGNAL(finished(QNetworkReply*)), this, SLOT(HttpUserLoginFinished(QNetworkReply*)));
     }
@@ -22,5 +22,8 @@ void AppContext::startUserAuthentication(const QString login, const QString pass
 }
 
 void AppContext::HttpUserLoginFinished (QNetworkReply *reply){
-    int i=0;
+    QString ret = reply->readAll();
+    qDebug("HttpUserLoginFinished");
+    reply->deleteLater();
+    _httpUserLogin->deleteLater();
 }
