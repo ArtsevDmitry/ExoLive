@@ -6,7 +6,8 @@ SOURCES += main.cpp \
     appcontext.cpp \
     userinfo.cpp
 
-RESOURCES += qml.qrc
+RESOURCES += \
+    Resources.qrc
 
 CONFIG += qml_debug
 
@@ -19,7 +20,9 @@ QML_IMPORT_PATH =
 include(deployment.pri)
 
 OTHER_FILES += \
-    standard.rc
+    standard.rc \
+    controls/PrimaryButton.qml \
+    controls/TextBox.qml
 
 HEADERS += \
     appcontext.h \

@@ -65,6 +65,7 @@
     <Compile Include="Providers\UserAgentProvider\Config\UserAgentProviderConfiguration.cs" />
     <Compile Include="Providers\UserAgentProvider\UserAgentProviderManager.cs" />
     <Compile Include="RestService\ApiKeyUser.cs" />
+    <Compile Include="RestService\OperatorClientServiceModule.cs" />
     <Compile Include="RestService\RestServiceHost.cs" />
     <Compile Include="RestService\ServiceAuthBootstrapper.cs" />
     <Compile Include="RestService\WebClientServiceModule.cs" />

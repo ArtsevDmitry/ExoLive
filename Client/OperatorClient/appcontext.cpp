@@ -15,7 +15,7 @@ void AppContext::startUserAuthentication(const QString login, const QString pass
     postData.append("l").append("=").append(login).append("&")
             .append("p").append("=").append(password);
 
-    QNetworkRequest request(QUrl("http://localhost:7777/webclient/662F996C0F4A4B2F9DCB9E269463CEF1/wsinit"));
+    QNetworkRequest request(QUrl("http://localhost:7777/operatorclient/auth"));
     request.setHeader(QNetworkRequest::ContentTypeHeader,"application/x-www-form-urlencoded");
 
     _httpUserLogin->post(request, postData);
@@ -23,6 +23,7 @@ void AppContext::startUserAuthentication(const QString login, const QString pass
 
 void AppContext::HttpUserLoginFinished (QNetworkReply *reply){
     QString ret = reply->readAll();
+    emit this->onLoginComplete(ret);
     qDebug("HttpUserLoginFinished");
     reply->deleteLater();
     _httpUserLogin->deleteLater();

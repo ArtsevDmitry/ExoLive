@@ -1,0 +1,26 @@
+<RCC>
+    <qresource prefix="/">
+        <file>application.qml</file>
+        <file alias="Controls">controls</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <file>LogoColored.ico</file>
+    </qresource>
+    <qresource prefix="/js">
+        <file>loginWindow.js</file>
+    </qresource>
+    <qresource prefix="/fonts">
+        <file>OpenSans-Bold.ttf</file>
+        <file>OpenSans-BoldItalic.ttf</file>
+        <file>OpenSans-CondBold.ttf</file>
+        <file>OpenSans-CondLight.ttf</file>
+        <file>OpenSans-CondLightItalic.ttf</file>
+        <file>OpenSans-Italic.ttf</file>
+        <file>OpenSans-Regular.ttf</file>
+    </qresource>
+    <qresource prefix="/images">
+        <file>LogoBig.png</file>
+        <file>UserServiceImage.png</file>
+        <file>PasswordServiceImage.png</file>
+    </qresource>
+</RCC>

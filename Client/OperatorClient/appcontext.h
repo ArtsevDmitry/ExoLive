@@ -22,6 +22,7 @@ public:
     Q_INVOKABLE void startUserAuthentication(const QString, const QString);
 
 signals:
+    void onLoginComplete(QString data);
 
 public slots:
     void HttpUserLoginFinished (QNetworkReply*);
