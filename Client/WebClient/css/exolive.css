@@ -1,0 +1,129 @@
+#exolive{
+	position:absolute;
+	transition: width .3s,height .3s,border-radius .3s;
+	border-top-right-radius:4px;
+	bottom:0;
+	border:dashed 2px #2eb3a6;
+	font-family:'Arial';
+}
+#exolive.conf_left{left:0}
+#exolive.conf_right{right:0}
+#exolive.active{
+	width:350px;
+	height:300px;
+	background:rgba(0,0,0,.7);
+	cursor:move;
+}
+#exolive.minimise{
+	background:rgba(30,30,30,.7);
+	width:150px!important;
+	height:35px!important;
+	bottom:0!important;
+	top:auto!important;
+}
+#exolive.minimise.conf_left{left:0!important;}
+#exolive.minimise.conf_right{left:auto!important;right:0%!important;}
+#exolive.minimise.conf_left_side{left:0!important;}/**/
+#exolive.minimise.conf_right_side{left:auto!important;right:0%!important;}/**/
+#exolive.minimise div.cont{display:none;}
+#exolive.active div.cont{display:block;}
+#exolive .invite{
+	width:100%;
+	height:35px;
+	line-height:35px;
+	text-align:center;
+	color:#fff;
+	font-family:"Arial";
+	font-size:14px;
+	font-weight:900;
+	cursor:pointer;
+}
+#exolive .invite:hover{color:#3fc4b7;}
+#exolive.active .invite{display:none;}
+#exolive.minimise .invite{display:block;}
+#exolive.minimise .close{display:none;}
+#exolive.active .close{
+	border-radius:50%;
+	width:20px;
+	line-height:20px;
+	text-align:center;
+	background:rgba(54,57,64,.9);
+	display:block;
+	position:relative;
+	color:#fff;
+	font-weight:900;
+	font-size:18px;
+	text-transform:capitalize;
+	font-family:"Arial";
+	left:100%;
+	margin-left:-10px;
+	margin-top:-10px;
+	cursor:pointer;
+	border:solid 2px #fff;
+	display:block;
+	transition: left .2s,top .2s;
+}
+#exolive.conf_right.active .close{
+	left:0;
+	margin-left:-10px
+}
+#exolive .close:hover{
+	background:rgba(46,179,166,.9);
+	border-color: #2eb3a6;
+}
+#exolive .loader{
+	margin:37% auto;
+	text-align:center;
+	display:block;
+}
+#exolive .hello{
+	color:#fff;
+	width:90%;
+	margin:0 auto;
+	font-family:'Arial';
+}
+#exolive .cont{
+	padding:0 10px;
+}
+#exolive form{
+	text-align:center;	
+}
+#exolive form input,#exolive form textarea{
+	width:86%;
+	padding-left:2%;
+	padding-right:2%;
+}
+#exolive form textarea{
+	height:90px;
+}
+#exolive #log{
+	border-radius:4px;
+	background:#fff;
+	height:140px;
+	overflow-y:auto;
+	margin:10px auto;
+	padding:2%;
+	width:86%;
+}
+#exolive #log .message{
+	border-radius:4px;
+	padding:3px;
+	font-size:13px;
+	display:inline-block;
+	margin:2px 0;
+	color:#333;
+	
+	background:#eef;
+	float:left;
+	clear:left;
+}
+#exolive #log .message.client{
+	float:left;
+	clear:left;
+	background:#eef;
+}
+#exolive #log .message.server{
+	float:right;
+	clear:right;
+	background:#eff;
+}

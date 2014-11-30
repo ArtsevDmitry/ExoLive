@@ -1,0 +1,115 @@
+﻿html, body, div, span, p, a, font, table, pre, thead, tbody, td, tr, th, ul, ol, li, h1, h2, h3, h4, h5, h6, form, label, fieldset, img, blockquote, strong, u, i, center, textarea, input, em{
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+} 
+FOOTER{display:block;}
+html {height: 100%;width:100%;overflow-y:scroll;}
+body {
+	width: 100%;
+	height: 100%;
+	line-height:1;
+}
+#main {	
+	width: 997px;
+	margin: 0 auto;
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;	
+	position:relative;
+}
+input {vertical-align: middle;}
+.cl{clear:both;}
+/* =Links/Headings-------------------------------*/
+a{	
+	font-family:;
+	font-size:;
+	color:;
+}
+a:hover{text-decoration:none;}
+table{
+	border-collapse:collapse;
+	border-spacing: 0;
+}
+h1{
+	font-family:;
+	font-size:;
+	color:;
+}
+h2{
+	font-family:;
+	font-size:;
+	color:;
+}
+h3{
+	font-family:;
+	font-size:;
+	color:;
+}
+p{
+	font-family:;
+	font-size:;
+	color:;
+}
+blockquote{
+
+}
+/* =Header-----------------------------------------*/
+.header {
+	width: 100%;
+	height: 100px;
+	background: #36f;
+}
+#to-main{
+	display:block;	
+	width:;
+	height:;
+	outline: none;
+}
+/* =Main Nav-----------*/
+ul#nav{
+	list-style:none;	
+}
+ul#nav li{
+}
+ul#nav li a{
+	font-family:;
+	font-size:;
+	color:;
+}
+
+/* =Left Column-----------------------------------*/
+.leftcolumn {
+	width: 200px;
+	float: left;
+	background:#eee;
+}
+
+/* =Content---------------------------------------*/
+.content {
+	width: 597px;
+	float: left;
+	background: #ccc;
+	height:1%;
+	/*padding-bottom:100px;*/
+}
+
+/* =Right Column-----------------------------------*/
+.rightcolumn {
+	width: 200px;
+	float: left;
+	background:#333;	
+}
+
+/* =Footer---------------------------------------*/
+#main .empty {height:100px; }
+footer {
+	clear:both;
+	position:relative; 
+	width:997px;
+	margin: 0 auto;
+	margin-top:-100px; 
+	height: 100px;
+	background: #006;
+}

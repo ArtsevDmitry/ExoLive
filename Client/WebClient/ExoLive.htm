@@ -1,8 +1,14 @@
 <!doctype html>
 <html>
-	<head>
-		<script src="jquery-1.11.0.min.js"></script>
-		<script src="jquery.exolive.js"></script>
+	<head>	
+		<link href="css/style.css" type="text/css" rel="stylesheet" />
+		
+		<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css" />
+		<link href="css/exolive.css" type="text/css" rel="stylesheet" />
+
+		<script src="js/jquery-1.11.0.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+		<script src="js/jquery.exolive.js"></script>
 	</head>
 	<body>
 		<script>
@@ -16,18 +22,48 @@
 						alert("InitComplete");
 					},
 					onMessageReceive: function(msg){
-						$("#log").prepend(msg + "<br />");
-					}
+						$("#log").append('<span class="message">' + msg + "</span>");
+					},
+					//onSuccessLoad: function(){
+						
+					//}
 				});
 				//live.showData();
-				
-				$("#button").click(function() {
-					live.debugMessageSend($("#text").val());
-				});
+					
 			});
 		</script>
-		<input type="text" id="text">
-		<button id="button">Send</button>
-		<div id="log" style="width: 100%"></div>
+		
+		<div id="main">
+			<div class="header">
+				<a href="index.html" id="to-main" title="На главную"></a>
+				<ul id="nav">
+					<li><a href="#"></a></li>
+					<li><a href="#"></a></li>
+					<li><a href="#"></a></li>
+				</ul>
+
+			</div><!--header-->
+			
+			<div class="leftcolumn">
+			
+				<br/><br/><br/>
+				
+			</div><!--leftcolumn-->
+			
+			<div class="content">
+
+				<br/><br/><br/>
+			
+			</div><!--content-->
+
+			<div class="rightcolumn">
+
+				<br/><br/><br/>
+				
+			</div><!--rightcolumn-->
+
+		</div><!--main-->
+		<footer>
+		</footer>
 	</body>
 </html>
