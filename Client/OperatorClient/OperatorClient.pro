@@ -22,7 +22,8 @@ include(deployment.pri)
 OTHER_FILES += \
     standard.rc \
     controls/PrimaryButton.qml \
-    controls/TextBox.qml
+    controls/TextBox.qml \
+    controls/AnimatedLogo.qml
 
 HEADERS += \
     appcontext.h \

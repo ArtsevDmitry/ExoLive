@@ -22,5 +22,10 @@
         <file>LogoBig.png</file>
         <file>UserServiceImage.png</file>
         <file>PasswordServiceImage.png</file>
+        <file>LogoPart1.png</file>
+        <file>LogoPart2.png</file>
+        <file>LogoPart3.png</file>
+        <file>LogoPart4.png</file>
+        <file>LogoPart5.png</file>
     </qresource>
 </RCC>
