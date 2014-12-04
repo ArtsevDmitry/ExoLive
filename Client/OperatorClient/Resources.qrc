@@ -2,30 +2,31 @@
     <qresource prefix="/">
         <file>application.qml</file>
         <file alias="Controls">controls</file>
+        <file alias="Windows">windows</file>
     </qresource>
     <qresource prefix="/icons">
-        <file>LogoColored.ico</file>
+        <file alias="LogoColored.ico">resources/icons/LogoColored.ico</file>
     </qresource>
     <qresource prefix="/js">
         <file>loginWindow.js</file>
     </qresource>
     <qresource prefix="/fonts">
-        <file>OpenSans-Bold.ttf</file>
-        <file>OpenSans-BoldItalic.ttf</file>
-        <file>OpenSans-CondBold.ttf</file>
-        <file>OpenSans-CondLight.ttf</file>
-        <file>OpenSans-CondLightItalic.ttf</file>
-        <file>OpenSans-Italic.ttf</file>
-        <file>OpenSans-Regular.ttf</file>
+        <file alias="OpenSans-Bold.ttf">resources/fonts/OpenSans-Bold.ttf</file>
+        <file alias="OpenSans-BoldItalic.ttf">resources/fonts/OpenSans-BoldItalic.ttf</file>
+        <file alias="OpenSans-CondBold.ttf">resources/fonts/OpenSans-CondBold.ttf</file>
+        <file alias="OpenSans-CondLight.ttf">resources/fonts/OpenSans-CondLight.ttf</file>
+        <file alias="OpenSans-CondLightItalic.ttf">resources/fonts/OpenSans-CondLightItalic.ttf</file>
+        <file alias="OpenSans-Italic.ttf">resources/fonts/OpenSans-Italic.ttf</file>
+        <file alias="OpenSans-Regular.ttf">resources/fonts/OpenSans-Regular.ttf</file>
     </qresource>
     <qresource prefix="/images">
-        <file>LogoBig.png</file>
-        <file>UserServiceImage.png</file>
-        <file>PasswordServiceImage.png</file>
-        <file>LogoPart1.png</file>
-        <file>LogoPart2.png</file>
-        <file>LogoPart3.png</file>
-        <file>LogoPart4.png</file>
-        <file>LogoPart5.png</file>
+        <file alias="LogoBig.png">resources/images/LogoBig.png</file>
+        <file alias="LogoPart1.png">resources/images/LogoPart1.png</file>
+        <file alias="LogoPart2.png">resources/images/LogoPart2.png</file>
+        <file alias="LogoPart3.png">resources/images/LogoPart3.png</file>
+        <file alias="LogoPart4.png">resources/images/LogoPart4.png</file>
+        <file alias="LogoPart5.png">resources/images/LogoPart5.png</file>
+        <file alias="PasswordServiceImage.png">resources/images/PasswordServiceImage.png</file>
+        <file alias="UserServiceImage.png">resources/images/UserServiceImage.png</file>
     </qresource>
 </RCC>
