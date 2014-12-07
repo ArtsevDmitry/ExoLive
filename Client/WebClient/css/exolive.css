@@ -1,18 +1,52 @@
-#exolive{
+/*#exolive_wrap{
 	position:absolute;
-	transition: width .3s,height .3s,border-radius .3s;
-	border-top-right-radius:4px;
+	right:0;
+	top:0;
+	height:482px;
+	overflow:hidden;
+	
+	width:392px;
+	top:calc(50% - 196px);
+}*/
+#exolive{
+	position:fixed;
+	transition: width .3s,
+		height .3s, 
+		transform .3s, 
+		margin .3s;
 	bottom:0;
 	border:dashed 2px #2eb3a6;
 	font-family:'Arial';
 }
-#exolive.conf_left{left:0}
-#exolive.conf_right{right:0}
+#exolive.conf_left{
+	border-top-right-radius:4px;
+}
+#exolive.conf_right{
+	right:0;
+	border-top-left-radius:4px;
+}
+#exolive.conf_right_side{
+	right:0;
+}
 #exolive.active{
-	width:350px;
-	height:300px;
+	width:380px;
+	height:400px;
 	background:rgba(0,0,0,.7);
 	cursor:move;
+	-moz-transform: rotate(0deg);
+	-webkit-transform: rotate(0deg);
+	-o-transform: rotate(0deg);
+	writing-mode: tb-rl;
+}
+#exolive.conf_left_side.active{
+	top:calc(50% - 201px);
+	border-radius:0 4px 4px 0;
+	margin:0;
+}
+#exolive.conf_right_side.active{
+	top:calc(50% - 201px);
+	border-radius:4px 0 0 4px;
+	margin:0;
 }
 #exolive.minimise{
 	background:rgba(30,30,30,.7);
@@ -22,18 +56,40 @@
 	top:auto!important;
 }
 #exolive.minimise.conf_left{left:0!important;}
-#exolive.minimise.conf_right{left:auto!important;right:0%!important;}
-#exolive.minimise.conf_left_side{left:0!important;}/**/
-#exolive.minimise.conf_right_side{left:auto!important;right:0%!important;}/**/
+#exolive.minimise.conf_right{
+	left:auto!important;
+	right:0%!important;
+}
+#exolive.minimise.conf_left_side{
+	left:0!important;
+	top:calc(50% - 18px)!important;
+	margin-left:-58px;
+	border-radius:4px 4px 0 0;
+	-moz-transform: rotate(90deg);
+	-webkit-transform: rotate(90deg);
+	-o-transform: rotate(90deg);
+	writing-mode: tb-rl;
+}
+#exolive.minimise.conf_right_side{
+	left:auto!important;
+	right:0%!important;
+	top:calc(50% - 18px)!important;
+	margin-right:-57px;
+	border-radius:4px 4px 0 0;
+	-moz-transform: rotate(-90deg);
+	-webkit-transform: rotate(-90deg);
+	-o-transform: rotate(-90deg);
+	writing-mode: tb-rl;
+}
 #exolive.minimise div.cont{display:none;}
 #exolive.active div.cont{display:block;}
 #exolive .invite{
 	width:100%;
 	height:35px;
+	height:inherit;
 	line-height:35px;
 	text-align:center;
 	color:#fff;
-	font-family:"Arial";
 	font-size:14px;
 	font-weight:900;
 	cursor:pointer;
@@ -54,7 +110,6 @@
 	font-weight:900;
 	font-size:18px;
 	text-transform:capitalize;
-	font-family:"Arial";
 	left:100%;
 	margin-left:-10px;
 	margin-top:-10px;
@@ -63,7 +118,7 @@
 	display:block;
 	transition: left .2s,top .2s;
 }
-#exolive.conf_right.active .close{
+#exolive.conf_right.active .close,#exolive.conf_right_side.active .close{
 	left:0;
 	margin-left:-10px
 }
@@ -71,16 +126,71 @@
 	background:rgba(46,179,166,.9);
 	border-color: #2eb3a6;
 }
+#exolive .close.-top{
+	top:0;
+	margin-top:-10px;
+	margin-bottom:-10px;
+}
+#exolive .close.-bottom{
+	top:100%;
+	margin-bottom:-10px;
+}
+#exolive .close.-left{
+	left:0!important;
+	margin-right:-10px
+}
+#exolive .close.-right{
+	left:100%!important;
+	margin-left:-10px;
+}
 #exolive .loader{
 	margin:37% auto;
 	text-align:center;
 	display:block;
 }
-#exolive .hello{
-	color:#fff;
-	width:90%;
+#exolive.state-1 .hello{
+	color:#333;
+	line-height:20px;
+	background:#fff;
+	border-radius:4px;
+	padding:3px 5px;
+	position: relative;
+	width:calc(90% - 10px);
 	margin:0 auto;
-	font-family:'Arial';
+	margin-bottom:10px;
+}
+#exolive.state-2 .hello{
+	color:#333;
+	line-height:20px;
+	background:#fff;
+	border-radius:4px;
+	padding:3px 5px;
+	position: relative;
+	float:right;
+	width:calc(90% - 70px);
+	margin-right:5%;
+	margin-bottom:10px;
+}
+#exolive.state-2  .hello:after {
+	right: 100%;
+	top: 3px;
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+	border-color: rgba(255, 255, 255, 0);
+	border-right-color: #fff;
+	border-width: 8px;
+}
+#exolive .photo{
+	float:left;
+	background:#fff;
+	border-radius:50%;
+	height:50px;
+	width:50px;
+	margin-left:5%;
 }
 #exolive .cont{
 	padding:0 10px;
@@ -88,14 +198,41 @@
 #exolive form{
 	text-align:center;	
 }
-#exolive form input,#exolive form textarea{
+#exolive form input,#exolive form textarea,#exolive form button{
 	width:86%;
-	padding-left:2%;
-	padding-right:2%;
+	padding:3px 2%;
+	border:solid 1px #2eb3a6;
+	border-radius:4px;
+	line-height:20px;
+	margin:5px 0;
+	color:#333;
+}
+#exolive form label{
+	font-size:14px;
+	color:#fff;
+}
+#exolive form#lead-gen input{
+	background:url(../i/UserServiceImage.png) no-repeat 2px center #fff;
+	padding-left:25px;
+	width:calc(86% - 25px);
+}
+#exolive form button{
+	width:90%;
+	padding:0;
+	line-height:30px;
+	background:#2eb3a6;
+	text-transform:uppercase;
+	color:#fff;
+	cursor:pointer;
+	font-weight:900;
 }
 #exolive form textarea{
 	height:90px;
 }
+#exolive form textarea.error,#exolive form input.error{
+	border-color:#f00;
+}
+#exolive #null{display:none;border:0;width:0;height:0;}
 #exolive #log{
 	border-radius:4px;
 	background:#fff;
@@ -126,4 +263,12 @@
 	float:right;
 	clear:right;
 	background:#eff;
+}
+#exolive .copyright{
+	color:#fff;
+	font-size:12px;
+}
+#exolive .copyright a{
+	color:#2eb3a6;
+	font-size:12px;
 }

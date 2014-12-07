@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
-	<head>	
+	<head>
+		<meta charset="utf-8">	
 		<link href="css/style.css" type="text/css" rel="stylesheet" />
 		
 		<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css" />
@@ -8,34 +9,32 @@
 
 		<script src="js/jquery-1.11.0.min.js"></script>
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
-		<script src="js/jquery.exolive.js"></script>
+		<script src="js/jquery.exolive.js" charset="utf-8"></script>
 	</head>
 	<body>
 		<script>
 			$(function() {
 				live = $.ExoLive({
-					apiKey: "662F996C0F4A4B2F9DCB9E269463CEF1",
+					apiKey	:	"662F996C0F4A4B2F9DCB9E269463CEF1",
+					align	:	"left_side",
+					lang	:	'ru',
 					onCapsDetecting: function(){
 						return { test: 123 };
 					},
 					onInitComplete: function(){
-						alert("InitComplete");
+						$('body').prepend("InitComplete:"+this.apiKey);
 					},
 					onMessageReceive: function(msg){
-						$("#log").append('<span class="message">' + msg + "</span>");
-					},
-					//onSuccessLoad: function(){
-						
-					//}
+						$("#log").append('<span class="message">'+msg+"</span>");
+					}
 				});
-				//live.showData();
 					
 			});
 		</script>
 		
 		<div id="main">
 			<div class="header">
-				<a href="index.html" id="to-main" title="Íà ãëàâíóþ"></a>
+				<a href="index.html" id="to-main" title="ÐÐ° Ð³Ð»Ð°Ð²Ð½ÑƒÑŽ"></a>
 				<ul id="nav">
 					<li><a href="#"></a></li>
 					<li><a href="#"></a></li>
@@ -51,9 +50,24 @@
 			</div><!--leftcolumn-->
 			
 			<div class="content">
-
 				<br/><br/><br/>
-			
+				<p>demo content</p>
+				<br/><br/><br/><br/><br/>
+				<p>demo content</p>
+				<br/><br/><br/><br/><br/>
+				<p>demo content</p>
+				<br/><br/><br/><br/><br/>
+				<p>demo content</p>
+				<br/><br/><br/><br/><br/>
+				<p>demo content</p>
+				<br/><br/><br/><br/><br/>
+				<p>demo content</p>
+				<br/><br/><br/><br/><br/>
+				<p>demo content</p>
+				<br/><br/><br/><br/><br/>
+				<p>demo content</p>
+				<br/><br/>
+
 			</div><!--content-->
 
 			<div class="rightcolumn">
