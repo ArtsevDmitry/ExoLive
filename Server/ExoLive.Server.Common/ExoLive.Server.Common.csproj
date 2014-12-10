@@ -57,6 +57,7 @@
     <Compile Include="Models\WebActivity.cs" />
     <Compile Include="Models\WebSessionInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Providers\DataContextManager.cs" />
     <Compile Include="Providers\DataProviderBase.cs" />
     <Compile Include="Providers\UserAgentProviderBase.cs" />
     <Compile Include="Server\MessageServerCommand.cs" />
