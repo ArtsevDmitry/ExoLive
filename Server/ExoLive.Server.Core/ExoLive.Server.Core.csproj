@@ -82,6 +82,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Database\ExoLiveCentralDb.db" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -119,7 +120,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y "$(ProjectDir)Database\ExoLiveCentralDb.db" "$(SolutionDir)ExoLive.Server.App\bin\$(ConfigurationName)\ExoLiveCentralDb.db"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
