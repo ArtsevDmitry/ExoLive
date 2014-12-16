@@ -44,12 +44,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="Internationalization\LangDataType.cs" />
+    <Compile Include="Internationalization\LangResourceBarrel.cs" />
+    <Compile Include="Internationalization\LangString.cs" />
     <Compile Include="IServerState.cs" />
     <Compile Include="Json\BaseResponseJson.cs" />
     <Compile Include="Models\ApiKeyInfo.cs" />
     <Compile Include="Models\ApiKey.cs" />
     <Compile Include="Models\Company.cs" />
+    <Compile Include="Models\LangResource.cs" />
+    <Compile Include="Models\LanguageInfo.cs" />
     <Compile Include="Models\Option.cs" />
     <Compile Include="Models\UserAgentInfo.cs" />
     <Compile Include="Models\WebDomain.cs" />

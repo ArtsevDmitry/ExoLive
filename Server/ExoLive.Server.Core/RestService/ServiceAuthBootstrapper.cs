@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using ExoLive.Server.Common;
 using ExoLive.Server.Core.Providers.DataProvider;
 using Nancy;
 using Nancy.Authentication.Stateless;
@@ -64,10 +65,13 @@ namespace ExoLive.Server.Core.RestService
             if (apiKeyInfo == null || !apiKeyInfo.WebDomains.Any())
                 return null;
 
+            var company = DataProviderManager.Default.GetCompanyByApiKey(apiKey, null);
+            var defaultLanguage = DataProviderManager.Default.GetDefaultLanguageByCompanyId(company.Id);
+
             if (!apiKeyInfo.IsDomainExist(domain))
                 return null;
 
-            return new ApiKeyUser(apiKeyInfo);
+            return new ApiKeyUser(apiKeyInfo, company, defaultLanguage);
         }
 
     }

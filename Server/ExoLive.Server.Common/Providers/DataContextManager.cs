@@ -110,6 +110,7 @@ namespace ExoLive.Server.Common.Providers
         /// Primary function for Run data operations
         /// </summary>
         /// <param name="runAction"></param>
+        [DebuggerStepThrough]
         public void Run(Action<DataContextManager<T>> runAction)
         {
             try
@@ -122,6 +123,7 @@ namespace ExoLive.Server.Common.Providers
             }
         }
 
+        //[DebuggerStepThrough]
         private void CleanUp()
         {
             if (_selfTransaction && _txn != null)

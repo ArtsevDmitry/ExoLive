@@ -4,6 +4,7 @@ using System.Text;
 using ExoLive.Server.Common.Json;
 using ExoLive.Server.Common.Models;
 using ExoLive.Server.Common.Server;
+using ExoLive.Server.Core.Providers.DataProvider;
 using Nancy;
 using Nancy.Security;
 using Newtonsoft.Json;
@@ -26,6 +27,7 @@ namespace ExoLive.Server.Core.RestService
                     BaseResponseJson result = WebClientApi.Instance.WebSessionInit((dicCaps["userAgent"]).Value, Request.UserHostAddress, webSessionId, Request.Headers.Referrer, dicCaps);
 
                     var jsonBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(result));
+
 
                     return new Response
                     {

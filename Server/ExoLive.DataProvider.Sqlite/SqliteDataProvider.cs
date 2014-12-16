@@ -5,6 +5,8 @@ using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
+using ExoLive.Server.Common.Internationalization;
 using ExoLive.Server.Common.Models;
 using ExoLive.Server.Common.Providers;
 
@@ -230,19 +232,14 @@ namespace ExoLive.DataProvider.SqLite
             }
         }
 
-        public override Company GetOrganization(Guid id, object objCnnOrTxn = null)
-        {
-            return null;
-        }
-
         public override ApiKeyInfo GetApiKeyInfo(string apiKey, object objCnnOrTxn = null)
         {
             using (var mgr = new DataContextManager<ApiKeyInfo>(objCnnOrTxn, CreateConnection))
             {
                 mgr.Run(state =>
                 {
-                    const string sql = @"SELECT A.Id, A.Key, A.Description, A.IsActive FROM ApiKeyTable A WHERE A.Key=@Key;
-SELECT D.Id, D.WebSiteName, D.Domain 
+                    const string sql = @"SELECT A.Id, A.CompanyId, A.Key, A.Description, A.IsActive FROM ApiKeyTable A WHERE A.Key=@Key;
+SELECT D.Id, D.WebSiteName, D.Domain, D.CompanyId 
 FROM ApiKeyTable A 
 INNER JOIN
 ApiKeyRefWebDomainTable Ref ON Ref.ApiKeyId=A.Id
@@ -262,6 +259,7 @@ WHERE A.Key=@Key;";
                             while (rd.Read())
                             {
                                 apiKeyInfo.Id = rd.ToNullString("Id", string.Empty);
+                                apiKeyInfo.CompanyId = rd.ToNullString("CompanyId", string.Empty);
                                 apiKeyInfo.Key = rd.ToNullString("Key", string.Empty);
                                 apiKeyInfo.Description = rd.ToNullString("Description", string.Empty);
                                 apiKeyInfo.IsActive = rd.ToNullBool("IsActive", false);
@@ -275,7 +273,8 @@ WHERE A.Key=@Key;";
                                     {
                                         Id = rd.ToNullString("Id", string.Empty),
                                         WebSiteName = rd.ToNullString("WebSiteName", string.Empty),
-                                        Domain = rd.ToNullString("Domain", string.Empty)
+                                        Domain = rd.ToNullString("Domain", string.Empty),
+                                        CompanyId = rd.ToNullString("CompanyId", string.Empty)
                                     };
                                     apiKeyInfo.WebDomains.Add(webDomain);
                                 }
@@ -803,7 +802,7 @@ WHERE A.Key=@Key;";
                 {
                     using (var cmd = CreateCommand(state.DataStateObj))
                     {
-                        cmd.CommandText = "SELECT Id, WebSiteName, Domain FROM WebDomainTable WHERE Domain=@Domain";
+                        cmd.CommandText = "SELECT Id, WebSiteName, Domain, CompanyId FROM WebDomainTable WHERE Domain=@Domain";
                         cmd.Parameters.AddWithValue("Domain", domainName);
                         using (var rd = cmd.ExecuteReader())
                         {
@@ -813,7 +812,8 @@ WHERE A.Key=@Key;";
                                 {
                                     Id = rd.ToNullString("Id", string.Empty),
                                     WebSiteName = rd.ToNullString("WebSiteName", string.Empty),
-                                    Domain = rd.ToNullString("Domain", string.Empty)
+                                    Domain = rd.ToNullString("Domain", string.Empty),
+                                    CompanyId = rd.ToNullString("CompanyId", string.Empty)
                                 };
                             }
                         }
@@ -823,5 +823,343 @@ WHERE A.Key=@Key;";
                 return mgr.Result;
             }
         }
+
+        public override LanguageInfo GetLanguageByCompanyId(string companyId, object objCnnOrTxn = null)
+        {
+            using (var mgr = new DataContextManager<LanguageInfo>(objCnnOrTxn, CreateConnection))
+            {
+                mgr.Run(state =>
+                {
+                    using (var cmd = CreateCommand(state.DataStateObj))
+                    {
+                        cmd.CommandText = "SELECT Id, Cultures, CompanyId, InternationalName, NativeName, IsDefault FROM LanguageTable WHERE CompanyId=@CompanyId";
+                        cmd.Parameters.AddWithValue("CompanyId", companyId);
+                        using (var rd = cmd.ExecuteReader())
+                        {
+                            while (rd.Read())
+                            {
+                                state.Result = new LanguageInfo
+                                {
+                                    Id = rd.ToNullString("Id", string.Empty),
+                                    CompanyId = rd.ToNullString("CompanyId", string.Empty),
+                                    Cultures = rd.ToNullString("Cultures", string.Empty),
+                                    InternationalName = rd.ToNullString("InternationalName", string.Empty),
+                                    NativeName = rd.ToNullString("NativeName", string.Empty)
+                                };
+                            }
+                        }
+                    }
+                });
+
+                return mgr.Result;
+            }
+        }
+
+        public override LanguageInfo GetDefaultLanguageByCompanyId(string companyId, object objCnnOrTxn = null)
+        {
+            using (var mgr = new DataContextManager<LanguageInfo>(objCnnOrTxn, CreateConnection))
+            {
+                mgr.Run(state =>
+                {
+                    using (var cmd = CreateCommand(state.DataStateObj))
+                    {
+                        cmd.CommandText = "SELECT Id, Cultures, CompanyId, InternationalName, NativeName, IsDefault FROM LanguageTable WHERE CompanyId=@CompanyId AND IsDefault=1";
+                        cmd.Parameters.AddWithValue("CompanyId", companyId);
+                        using (var rd = cmd.ExecuteReader())
+                        {
+                            while (rd.Read())
+                            {
+                                state.Result = new LanguageInfo
+                                {
+                                    Id = rd.ToNullString("Id", string.Empty),
+                                    CompanyId = rd.ToNullString("CompanyId", string.Empty),
+                                    Cultures = rd.ToNullString("Cultures", string.Empty),
+                                    InternationalName = rd.ToNullString("InternationalName", string.Empty),
+                                    NativeName = rd.ToNullString("NativeName", string.Empty)
+                                };
+                            }
+                        }
+                    }
+                });
+
+                return mgr.Result;
+            }
+        }
+
+        public override LangResourceBarrel GetLangResourceBarrel(List<string> ownerIds, string defaultLanguageId, object objCnnOrTxn = null)
+        {
+            using (var mgr = new DataContextManager<LangResourceBarrel>(objCnnOrTxn, CreateConnection))
+            {
+                mgr.Run(state =>
+                {
+                    var inClause = string.Join(",", ownerIds);
+                    inClause = string.Format("'{0}'", inClause.Replace(",", "','"));
+
+                    if (string.IsNullOrEmpty(defaultLanguageId))
+                    {
+                        var companyId = GetCompanyIdByOwnerIds(ownerIds, state.DataStateObj);
+                        var language = GetDefaultLanguageByCompanyId(companyId, state.DataStateObj);
+                        if (language != null)
+                            defaultLanguageId = language.Id;
+                    }
+
+                    var result = new LangResourceBarrel(defaultLanguageId);
+                    var resultItems = new List<LangResource>();
+
+                    using (var cmd = CreateCommand(state.DataStateObj))
+                    {
+                        cmd.CommandText = string.Format("SELECT Id, \"Key\", Value, LanguageId, OwnerId FROM LanguageResourceTable WHERE OwnerId IN ({0});", inClause);
+                        using (var rd = cmd.ExecuteReader())
+                        {
+                            while (rd.Read())
+                            {
+                                resultItems.Add(new LangResource
+                                {
+                                    Id = rd.ToNullString("Id", string.Empty),
+                                    Key = rd.ToNullString("Key", string.Empty),
+                                    Value = rd.ToNullString("Value", string.Empty),
+                                    LanguageId = rd.ToNullString("LanguageId", string.Empty),
+                                    OwnerId = rd.ToNullString("OwnerId", null)
+                                });
+                            }
+                        }
+                    }
+
+                    result.SetResources(resultItems);
+                    state.Result = result;
+                });
+
+                return mgr.Result;
+            }
+        }
+
+        public override Company GetCompanyById(string id, string defaultLanguageId, object objCnnOrTxn = null)
+        {
+            using (var mgr = new DataContextManager<Company>(objCnnOrTxn, CreateConnection))
+            {
+                mgr.Run(state =>
+                {
+                    var barrel = GetLangResourceBarrel(new List<string> { id }, defaultLanguageId, state.DataStateObj);
+
+                    using (var cmd = CreateCommand(state.DataStateObj))
+                    {
+                        cmd.CommandText = "SELECT Id FROM CompanyTable WHERE Id=@Id";
+                        cmd.Parameters.AddWithValue("Id", id);
+                        using (var rd = cmd.ExecuteReader())
+                        {
+                            while (rd.Read())
+                            {
+                                var result = new Company
+                                {
+                                    Id = rd.ToNullString("Id", string.Empty)
+                                };
+                                result.SetBarrel(barrel);
+
+                                state.Result = result;
+                            }
+                        }
+                    }
+                });
+
+                return mgr.Result;
+            }
+        }
+
+        public override Company GetCompanyByApiKey(string apiKey, string defaultLanguageId, object objCnnOrTxn = null)
+        {
+            using (var mgr = new DataContextManager<Company>(objCnnOrTxn, CreateConnection))
+            {
+                mgr.Run(state =>
+                {
+                    string companyId;
+                    using (var cmd = CreateCommand(state.DataStateObj))
+                    {
+                        cmd.CommandText = string.Format(
+                            @"SELECT DISTINCT D.CompanyId FROM ApiKeyTable A
+                            INNER JOIN ApiKeyRefWebDomainTable REF ON REF.ApiKeyId=A.Id
+                            INNER JOIN WebDomainTable D ON D.Id=REF.WebDomainId
+                            WHERE A.Key='{0}'
+                            LIMIT 1;", apiKey);
+
+                        companyId = cmd.ExecuteScalar() as string;
+                    }
+
+                    if (string.IsNullOrEmpty(companyId)) return;
+
+                    var barrel = GetLangResourceBarrel(new List<string> { companyId }, defaultLanguageId, state.DataStateObj);
+
+                    using (var cmd = CreateCommand(state.DataStateObj))
+                    {
+                        cmd.CommandText = "SELECT Id FROM CompanyTable WHERE Id=@Id";
+                        cmd.Parameters.AddWithValue("Id", companyId);
+                        using (var rd = cmd.ExecuteReader())
+                        {
+                            while (rd.Read())
+                            {
+                                var result = new Company
+                                {
+                                    Id = rd.ToNullString("Id", string.Empty)
+                                };
+                                result.SetBarrel(barrel);
+
+                                state.Result = result;
+                            }
+                        }
+                    }
+                });
+
+                return mgr.Result;
+            }
+        }
+
+        public override Company CreateCompany(Company data, object objCnnOrTxn = null)
+        {
+            if (data == null) return null;
+            if (string.IsNullOrEmpty(data.Id)) data.Id = Guid.NewGuid().ToString();
+
+            using (var mgr = new DataContextManager<object>(objCnnOrTxn, CreateConnection))
+            {
+                mgr.Run(state =>
+                {
+                    using (var cmd = CreateCommand(state.DataStateObj))
+                    {
+                        cmd.CommandText = "INSERT INTO CompanyTable(Id) VALUES(@Id)";
+                        cmd.Parameters.AddWithValue("Id", data.Id);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    SaveLangResources(data.GetLangResources(), state.DataStateObj);
+
+                    state.SafeCommit();
+                });
+            }
+
+            return data;
+        }
+
+        public override void DeleteCompany(string id, object objCnnOrTxn = null)
+        {
+            using (var mgr = new DataContextManager<Company>(objCnnOrTxn, CreateConnection))
+            {
+                mgr.Run(state =>
+                {
+                    using (var cmd = CreateCommand(state.DataStateObj))
+                    {
+                        cmd.CommandText = "DELETE FROM CompanyTable WHERE Id=@Id";
+                        cmd.Parameters.AddWithValue("Id", id);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    state.SafeCommit();
+                });
+            }
+        }
+
+        private void SaveLangResources(List<LangResource> langResources, object objCnnOrTxn = null)
+        {
+            using (var mgr = new DataContextManager<object>(objCnnOrTxn, CreateConnection))
+            {
+                mgr.Run(state =>
+                {
+                    DeleteLangResources(langResources, state.DataStateObj);
+
+                    foreach (var langResource in langResources)
+                        InsertLangResource(langResource, state.DataStateObj);
+
+                    state.SafeCommit();
+                });
+            }
+        }
+
+        private void DeleteLangResources(IEnumerable<LangResource> langResources, object objCnnOrTxn = null)
+        {
+            if (langResources == null) return;
+
+            var ids = from LangResource res in langResources
+                      select res.Id;
+
+            DeleteLangResources(ids, objCnnOrTxn);
+        }
+
+        private void DeleteLangResources(IEnumerable<string> ids, object objCnnOrTxn = null)
+        {
+            var inClause = string.Join(",", ids);
+            inClause = string.Format("'{0}'", inClause.Replace(",", "','"));
+
+            using (var mgr = new DataContextManager<object>(objCnnOrTxn, CreateConnection))
+            {
+                mgr.Run(state =>
+                {
+                    using (var cmd = CreateCommand(state.DataStateObj))
+                    {
+                        cmd.CommandText = string.Format("DELETE FROM LanguageResourceTable WHERE Id IN({0})", inClause);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    state.SafeCommit();
+                });
+            }
+        }
+
+        private void InsertLangResource(LangResource langResource, object objCnnOrTxn = null)
+        {
+            using (var mgr = new DataContextManager<object>(objCnnOrTxn, CreateConnection))
+            {
+                mgr.Run(state =>
+                {
+                    using (var cmd = CreateCommand(state.DataStateObj))
+                    {
+                        cmd.CommandText = "INSERT INTO LanguageResourceTable(Id, \"Key\", Value, LanguageId, OwnerId) VALUES(@Id, @Key, @Value, @LanguageId, @OwnerId)";
+                        cmd.Parameters.AddWithValue("Id", langResource.Id);
+                        cmd.Parameters.AddWithValue("Key", langResource.Key);
+                        cmd.Parameters.AddWithValue("Value", langResource.Value);
+                        cmd.Parameters.AddWithValue("LanguageId", langResource.LanguageId);
+                        cmd.Parameters.AddWithValue("OwnerId", langResource.OwnerId);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    state.SafeCommit();
+                });
+            }
+        }
+
+        private string GetCompanyIdByOwnerIds(IEnumerable<string> ownerIds, object objCnnOrTxn = null)
+        {
+            using (var mgr = new DataContextManager<string>(objCnnOrTxn, CreateConnection))
+            {
+                mgr.Run(state =>
+                {
+                    var inClause = string.Join(",", ownerIds);
+                    inClause = string.Format("'{0}'", inClause.Replace(",", "','"));
+
+                    using (var cmd = CreateCommand(state.DataStateObj))
+                    {
+                        cmd.CommandText = string.Format(
+                            @"SELECT R.CompanyId 
+                            FROM (SELECT 
+                              L1.*
+                            FROM (SELECT DISTINCT 
+                              L.CompanyId AS Id 
+                            FROM (SELECT 
+                              LanguageId 
+                            FROM LanguageResourceTable WHERE OwnerId IN({0})) T 
+                              INNER JOIN LanguageTable L ON 
+                                L.Id=T.LanguageId 
+                            LIMIT 1) C 
+                              INNER JOIN LanguageTable L1 ON 
+                                L1.CompanyId = C.Id
+                                ) R
+                                WHERE R.IsDefault=1
+                            ", inClause);
+
+                        state.Result = cmd.ExecuteScalar() as string;
+                    }
+
+                });
+
+                return mgr.Result;
+            }
+        }
+
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration.Provider;
 using System.Data;
+using ExoLive.Server.Common.Internationalization;
 using ExoLive.Server.Common.Models;
 
 namespace ExoLive.Server.Common.Providers
@@ -24,7 +25,6 @@ namespace ExoLive.Server.Common.Providers
         public abstract Option SetOption(string key, string value, object objCnnOrTxn = null);
         public abstract Option GetOption(string key, string defaultValue = null, object objCnnOrTxn = null);
         public abstract List<Option> GetOptions(string keyData, OptionSearchPattern searchPattern, string defaultValue = null, object objCnnOrTxn = null);
-        public abstract Company GetOrganization(Guid id, object objCnnOrTxn = null);
         public abstract ApiKeyInfo GetApiKeyInfo(string apiKey, object objCnnOrTxn = null);
         public abstract void InsertUserAgentInfoBulk(List<UserAgentInfo> items, object objCnnOrTxn = null);
         public abstract void DeleteAllUserAgentInfo(object objCnnOrTxn = null);
@@ -40,5 +40,12 @@ namespace ExoLive.Server.Common.Providers
         public abstract List<WebFieldInfo> FindWebFieldBulkByWebSession(List<string> keys, object objCnnOrTxn = null);
         public abstract List<WebFieldInfo> FindWebFieldBulkByWebActivity(List<string> keys, string webActivityId, object objCnnOrTxn = null);
         public abstract WebDomain FindWebDomain(string domainName, object objCnnOrTxn = null);
+        public abstract LanguageInfo GetLanguageByCompanyId(string companyId, object objCnnOrTxn = null);
+        public abstract LanguageInfo GetDefaultLanguageByCompanyId(string companyId, object objCnnOrTxn = null);
+        public abstract LangResourceBarrel GetLangResourceBarrel(List<string> ownerIds, string defaultLanguageId, object objCnnOrTxn = null);
+        public abstract Company GetCompanyById(string id, string defaultLanguageId, object objCnnOrTxn = null);
+        public abstract Company GetCompanyByApiKey(string apiKey, string defaultLanguageId, object objCnnOrTxn = null);
+        public abstract Company CreateCompany(Company data, object objCnnOrTxn = null);
+        public abstract void DeleteCompany(string id, object objCnnOrTxn = null);
     }
 }

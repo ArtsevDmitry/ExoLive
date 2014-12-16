@@ -10,11 +10,15 @@ namespace ExoLive.Server.Core.RestService
     public class ApiKeyUser : IUserIdentity
     {
         private readonly List<string> _claims = new List<string>();
-        private ApiKeyInfo _apiKeyInfo;
+        private readonly ApiKeyInfo _apiKeyInfo;
+        private readonly Company _company;
+        private readonly LanguageInfo _defaultLanguage;
 
-        public ApiKeyUser(ApiKeyInfo apiKeyInfo)
+        public ApiKeyUser(ApiKeyInfo apiKeyInfo, Company company, LanguageInfo defaultLanguage)
         {
-            ApiKeyInfo = apiKeyInfo;
+            _apiKeyInfo = apiKeyInfo;
+            _company = company;
+            _defaultLanguage = defaultLanguage;
             _claims.Add(string.Format("ApiKey={0}", _apiKeyInfo.Key));
         }
 
@@ -31,7 +35,17 @@ namespace ExoLive.Server.Core.RestService
         public ApiKeyInfo ApiKeyInfo
         {
             get { return _apiKeyInfo; }
-            private set { _apiKeyInfo = value; }
         }
+
+        public Company Company
+        {
+            get { return _company; }
+        }
+
+        public LanguageInfo DefaultLanguage
+        {
+            get { return _defaultLanguage; }
+        }
+
     }
 }

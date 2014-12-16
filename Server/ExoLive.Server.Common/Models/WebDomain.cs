@@ -5,6 +5,7 @@
         public string Id { get; set; }
         public string WebSiteName { get; set; }
         public string Domain { get; set; }
+        public string CompanyId { get; set; }
 
     }
 }

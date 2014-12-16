@@ -63,7 +63,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extensions.cs" />
     <Compile Include="Providers\DataProvider\Config\DataProviderCollection.cs" />
     <Compile Include="Providers\DataProvider\Config\DataProviderConfiguration.cs" />
     <Compile Include="Providers\DataProvider\DataProviderManager.cs" />
